@@ -31,13 +31,29 @@ git clone https://github.com/HarmonizedMRI/pge2.git
 
 ---
 
-## Getting Started
+## Usage
 
-```matlab
-psq = pulseg.fromSeq('path/to/sequence.seq');   % Generate psq in PulSeg
-pge2.check(psq);                                % Basic compatibility check
-pge2.serialize(psq, 'output.pge');            % Export for GE backend
-```
+For the most up to date workflow, see `main.m` in https://github.com/HarmonizedMRI/SequenceExamples-GE/tree/main/pge2/2DGRE
+
+Overview:
+1. Create the Pulseq (`.seq`) file. Assign `TRID` label to the first block in each segment instance.
+
+2. Convert to PulSeg intermediate representation
+    ```matlab
+    psq = pulseg.fromSeq('path/to/sequence.seq');   % Generate psq in PulSeg
+    ```
+
+3.  Export to binary file for execution on GE scanners using the pge2 interpreter
+    ```matlab
+    params = pge2.check(psq, sysGE); 
+    pge2.serialize(psq, 'output.pge');            % Export for GE backend
+    ```
+
+4. (optional) Compare output of WTools simulator (MR30.2) with the original Pulseq file:
+    ```   
+    xmlPath = '~/transfer/xml/';   % directory for Pulse View .xml files
+    pge2.validate(psq, sysGE, seq, xmlPath, 'row', [], 'plot', true);
+    ```
 
 ---
 
