@@ -41,7 +41,6 @@ pge2.serialize(psq, 'output.pge');            % Export for GE backend
 
 ## Documentation
 
-See [PulSeg psq specification](https://github.com/HarmonizedMRI/pulseg/blob/dev/docs/spec.md)
 Full API documentation coming soon.
 
 ---
