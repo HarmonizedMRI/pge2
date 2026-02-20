@@ -1,7 +1,3 @@
-<p align="left">
-  <img src="assets/logo.svg" alt="PulSeg logo" width="240">
-</p>
-
 # pge2
 
 **Serialization & utility toolkit for exporting [PulSeg](https://github.com/HarmonizedMRI/pulseg) intermediate representations to GE MRI platforms**
@@ -10,24 +6,16 @@
 
 ## Overview
 
-This package implements the `+pge2` MATLAB namespace for harmonized MRI research workflows targeting GE hardware. It allows researchers to:
+This package implements the `+pge2` MATLAB namespace for exporting a `PulSeg` intermediate sequence representation to a binary file that can be consumed by the `pge2` GE interpreter.
 
-- Serialize PulSeg IR sequences into GE-compatible binary files for use with the GE `pge2` interpreter.
-- Validate PulSeg IR objects for GE compatibility.
-- Plot and inspect GE-ready sequence structures.
-- Run advanced checks with built-in methods like `pge2.check()` and `validate()`.
+Key Features:
+- `pge2.serialize(psq, filename)`: Export PulSeg sequence object (`psq1) to GE binary format
+- `pge2.check(psq, sysGE, ...)`: Check compatibility of psq with GE scanner specifications
+- `pge2.plot(psq, sysGE, ...)`: Visualize segment/block layout and detailed timing
+- `pge2.validate(psq, seq, ...)`: Validate psq structure and GE simulator (WTools) output against original Pulseq sequence object (`seq`)
 
 > **Note:**
 > This package does not execute sequences directly on GE hardware, but prepares files and utilities for the downstream GE backend interpreter.
-
----
-
-## Key Features
-
-- `pge2.serialize(IR, filename)`: Export PulSeg IR to GE binary format
-- `pge2.check(IR)`: Consistency checks for GE compatibility
-- `pge2.validate(IR)`: Validation of IR structure for GE
-- `pge2.plot(IR)`: Visualization of segment/block layout
 
 ---
 
@@ -44,16 +32,16 @@ git clone https://github.com/HarmonizedMRI/pge2.git
 ## Getting Started
 
 ```matlab
-IR = pulseg.fromSeq('path/to/sequence.seq');   % Generate IR in PulSeg
-pge2.check(IR);                               % Basic compatibility check
-pge2.serialize(IR, 'output.gebin');            % Export for GE backend
+psq = pulseg.fromSeq('path/to/sequence.seq');   % Generate psq in PulSeg
+pge2.check(psq);                                % Basic compatibility check
+pge2.serialize(psq, 'output.pge');            % Export for GE backend
 ```
 
 ---
 
 ## Documentation
 
-See [PulSeg IR specification](https://github.com/HarmonizedMRI/pulseg/blob/dev/docs/spec.md)
+See [PulSeg psq specification](https://github.com/HarmonizedMRI/pulseg/blob/dev/docs/spec.md)
 Full API documentation coming soon.
 
 ---
