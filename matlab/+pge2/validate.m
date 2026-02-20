@@ -38,7 +38,7 @@ if ischar(arg.row) | isempty(arg.row)
 end
 
 if ~isempty(xmlPath)
-    xmlPath = pge2.utils.ensuretrailingslash(xmlPath);
+    xmlPath = ensuretrailingslash(xmlPath);
 end
 
 axesLinked = false;
@@ -73,15 +73,15 @@ while n < ceq.nMax % & cnt < 2
     % pge2 interpreter waveforms 
     % and RF/ADC phase offset
     if ~isempty(xmlPath)
-        d = pge2.utils.read_segment_xml(sprintf('%sscan.xml.%04d', xmlPath, cnt));
-        th = pge2.utils.readthetaregisters(sprintf('%sscan.xml.%04d.ssp', xmlPath, cnt));
+        d = read_segment_xml(sprintf('%sscan.xml.%04d', xmlPath, cnt));
+        th = readthetaregisters(sprintf('%sscan.xml.%04d.ssp', xmlPath, cnt));
         %phaseOffset.pge2 = th(1).theta/2^23*pi;
     end
 
     % Ceq object waveforms
     L = ceq.loop(n1:n2, :);
     try
-        S = pge2.getsegmentinstance(ceq, i, sysGE, L, 'rotate', true, 'interpolate', true);
+        S = getsegmentinstance(ceq, i, sysGE, L, 'rotate', true, 'interpolate', true);
     catch ME
         error(sprintf('(n = %d, i = %d): %s\n', n, i, ME.message));
     end
@@ -125,9 +125,9 @@ while n < ceq.nMax % & cnt < 2
         if length(tt.seq) > 0
             % interpolate to tt.seq
             if ~isempty(xmlPath)
-                [gi, I] = pge2.utils.robustinterp1(tt.pge2, g.pge2, tt.seq);
+                [gi, I] = robustinterp1(tt.pge2, g.pge2, tt.seq);
             else
-                [gi, I] = pge2.utils.robustinterp1(tt.ceq, g.ceq, tt.seq);
+                [gi, I] = robustinterp1(tt.ceq, g.ceq, tt.seq);
             end
             tmp = g.seq(I);  % if I is full/sparse this is either row/column vector :(
             [err, Imaxdiff] = max(abs(gi(:)-tmp(:)));    % max difference, G/cm
@@ -178,7 +178,7 @@ while n < ceq.nMax % & cnt < 2
         theta = angle(exp(-1i*theta));  % minus sign since the pge2 interpreter conjugates the phase
 
         % construct complex waveform
-        [thetai, I] = pge2.utils.robustinterp1(tt.theta, theta, tt.rho);
+        [thetai, I] = robustinterp1(tt.theta, theta, tt.rho);
         rf.pge2 = rho(I) .* exp(1i*thetai);
         tt.pge2 = tt.rho(I);
 
@@ -197,9 +197,9 @@ while n < ceq.nMax % & cnt < 2
 
     if length(rf.seq) > 0
         if ~isempty(xmlPath)
-            [rfi, I] = pge2.utils.robustinterp1(tt.pge2, rf.pge2, tt.seq);
+            [rfi, I] = robustinterp1(tt.pge2, rf.pge2, tt.seq);
         else
-            [rfi, I] = pge2.utils.robustinterp1(tt.ceq, rf.ceq, tt.seq);
+            [rfi, I] = robustinterp1(tt.ceq, rf.ceq, tt.seq);
         end
         tmp = rf.seq(I);  % if I is full/sparse this is either row/column vector :(
         if norm(rfi) > 0
