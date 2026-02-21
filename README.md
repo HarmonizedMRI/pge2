@@ -49,12 +49,13 @@ Overview:
 
 3.  Export to binary file for execution on GE scanners using the pge2 interpreter
     ```matlab
-    params = pge2.check(psq, sysGE); 
     pge2.serialize(psq, 'output.pge');            % Export for GE backend
     ```
 
 4. (optional) Compare output of WTools simulator (MR30.2) with the original Pulseq file:
     ```   
+    seq = mr.Sequence();
+    seq.read('path/to/sequence.seq');
     xmlPath = '~/transfer/xml/';   % directory for Pulse View .xml files
     pge2.validate(psq, sysGE, seq, xmlPath, 'row', [], 'plot', true);
     ```
