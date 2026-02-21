@@ -1,4 +1,7 @@
-# pge2
+<p align="left">
+  <img src="assets/logo.svg" alt="pulseg logo" width="320"/>
+</p>
+
 
 🛠️ Under Development
 
