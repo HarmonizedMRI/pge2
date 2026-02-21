@@ -49,7 +49,7 @@ Overview:
 
 3.  Export to binary file for execution on GE scanners using the pge2 interpreter
     ```matlab
-    pge2.serialize(psq, 'output.pge');            % Export for GE backend
+    pge2.serialize(psq, 'output.bin');            % Export for GE backend
     ```
 
 4. (optional) Compare output of WTools simulator (MR30.2) with the original Pulseq file:
