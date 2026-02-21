@@ -14,10 +14,10 @@
 This package implements the `+pge2` MATLAB namespace for exporting a `PulSeg` intermediate sequence representation to a binary file that can be consumed by the `pge2` GE interpreter.
 
 Key Features:
-- `pge2.serialize(psq, filename)`: Export PulSeg sequence object (`psq1) to GE binary format
-- `pge2.check(psq, sysGE, ...)`: Check compatibility of psq with GE scanner specifications
+- `pge2.serialize(psq, 'output.bin')`: Export PulSeg sequence object (`psq`) to GE binary format
+- `pge2.check(psq, sysGE, ...)`: Check compatibility of `psq` sequence object with GE scanner specifications
 - `pge2.plot(psq, sysGE, ...)`: Visualize segment/block layout and detailed timing
-- `pge2.validate(psq, seq, ...)`: Validate psq structure and GE simulator (WTools) output against original Pulseq sequence object (`seq`)
+- `pge2.validate(psq, seq, ...)`: Validate `psq` structure and GE simulator (WTools) output against original Pulseq sequence object (`seq`)
 
 > **Note:**
 > This package does not execute sequences directly on GE hardware, but prepares files and utilities for the downstream GE backend interpreter.
