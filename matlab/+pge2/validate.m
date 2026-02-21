@@ -1,19 +1,19 @@
-function ok = validate(ceq, sysGE, seq, xmlPath, varargin)
+function ok = validate(psq, sysGE, seq, xmlPath, varargin)
 % validate - Compare waveforms in Ceq object/WTools against original .seq file
 % 
-% function validate(ceq, sysGE, seq, xmlPath, ...)
+% function validate(psq, sysGE, seq, xmlPath, ...)
 %
 % Check agreement between pge2 interpreter output on scanner/VM/WTools
 % and the original Pulseq (.seq) object.
-% If 'xmlPath' is empty ([]), the ceq object is used instead.
+% If 'xmlPath' is empty ([]), the psq object is used instead.
 %
 % Inputs:
-%   ceq       struct         Ceq sequence object, see seq2ceq.m
+%   psq       struct         Ceq sequence object, see seq2psq.m
 %   sysGE     struct         System hardware info, see pge2.opts()
 %   seq       struct         A Pulseq sequence object
 %   xmlPath   string or []   Path to folder containing scan.xml.<xxxx> files.
 %                            These files are also used by GE's Pulse View sequence plotter.
-%                            If empty, the ceq object is used instead.
+%                            If empty, the psq object is used instead.
 % 
 % Input options:
 %   'row'           [1] or 'all'/[]   Check and plot segment starting at this number in .seq file (default: 'all')
@@ -54,13 +54,13 @@ if ~arg.plot
 else
     figure
 end
-while n < ceq.nMax % & cnt < 2
+while n < psq.nMax % & cnt < 2
     cnt = cnt + 1;
 
     % determine block range
-    i = ceq.loop(n,1);        % segment index
+    i = psq.loop(n,1);        % segment index
     n1 = n;
-    n2 = n - 1 + ceq.segments(i).nBlocksInSegment;
+    n2 = n - 1 + psq.segments(i).nBlocksInSegment;
 
     if n < arg.row
         n = n2 + 1;
@@ -79,9 +79,9 @@ while n < ceq.nMax % & cnt < 2
     end
 
     % Ceq object waveforms
-    L = ceq.loop(n1:n2, :);
+    L = psq.loop(n1:n2, :);
     try
-        S = getsegmentinstance(ceq, i, sysGE, L, 'rotate', true, 'interpolate', true);
+        S = getsegmentinstance(psq, i, sysGE, L, 'rotate', true, 'interpolate', true);
     catch ME
         error(sprintf('(n = %d, i = %d): %s\n', n, i, ME.message));
     end
@@ -104,16 +104,16 @@ while n < ceq.nMax % & cnt < 2
         tt.seq = w{iax}(1,:);                   % sec
         g.seq = w{iax}(2,:)/sysGE.gamma/100;    % Gauss/cm
 
-        % Ceq object (after seq2ceq.m conversion)
-        tt.ceq = S.(ax{iax}).t - sysGE.segment_dead_time;
-        g.ceq = S.(ax{iax}).signal;
+        % Ceq object (after seq2psq.m conversion)
+        tt.psq = S.(ax{iax}).t - sysGE.segment_dead_time;
+        g.psq = S.(ax{iax}).signal;
 
         if ~isempty(xmlPath)
             plt.tmin = min(plt.tmin, min(tt.pge2(1)));
             plt.tmax = max(plt.tmax, max(tt.pge2(end)));
         else
-            plt.tmin = min(plt.tmin, min(tt.ceq(1)));
-            plt.tmax = max(plt.tmax, max(tt.ceq(end)));
+            plt.tmin = min(plt.tmin, min(tt.psq(1)));
+            plt.tmax = max(plt.tmax, max(tt.psq(end)));
         end
 
         % Check difference with seq object.
@@ -127,7 +127,7 @@ while n < ceq.nMax % & cnt < 2
             if ~isempty(xmlPath)
                 [gi, I] = robustinterp1(tt.pge2, g.pge2, tt.seq);
             else
-                [gi, I] = robustinterp1(tt.ceq, g.ceq, tt.seq);
+                [gi, I] = robustinterp1(tt.psq, g.psq, tt.seq);
             end
             tmp = g.seq(I);  % if I is full/sparse this is either row/column vector :(
             [err, Imaxdiff] = max(abs(gi(:)-tmp(:)));    % max difference, G/cm
@@ -150,7 +150,7 @@ while n < ceq.nMax % & cnt < 2
             if ~isempty(xmlPath)
                 plot(1e3*tt.pge2, g.pge2, 'r.-');
             else
-                plot(1e3*tt.ceq, g.ceq, 'r.-');
+                plot(1e3*tt.psq, g.psq, 'r.-');
             end
             ylabel(sprintf('%s\n(G/cm)', ax{iax}), 'Rotation', 0);
         end
@@ -185,13 +185,13 @@ while n < ceq.nMax % & cnt < 2
         plt.tmin = min(plt.tmin, min(tt.pge2(1)));
         plt.tmax = max(plt.tmax, max(tt.pge2(end)));
     else
-        % Ceq object waveform (output of seq2ceq.m)
-        tt.ceq = S.rf.t - sysGE.segment_dead_time - sysGE.psd_rf_wait;
-        rf.ceq = S.rf.signal;
+        % Ceq object waveform (output of seq2psq.m)
+        tt.psq = S.rf.t - sysGE.segment_dead_time - sysGE.psd_rf_wait;
+        rf.psq = S.rf.signal;
 
         if length(rf.seq) > 0
-            plt.tmin = min(plt.tmin, min(tt.ceq(1)));
-            plt.tmax = max(plt.tmax, max(tt.ceq(end)));
+            plt.tmin = min(plt.tmin, min(tt.psq(1)));
+            plt.tmax = max(plt.tmax, max(tt.psq(end)));
         end
     end
 
@@ -199,7 +199,7 @@ while n < ceq.nMax % & cnt < 2
         if ~isempty(xmlPath)
             [rfi, I] = robustinterp1(tt.pge2, rf.pge2, tt.seq);
         else
-            [rfi, I] = robustinterp1(tt.ceq, rf.ceq, tt.seq);
+            [rfi, I] = robustinterp1(tt.psq, rf.psq, tt.seq);
         end
         tmp = rf.seq(I);  % if I is full/sparse this is either row/column vector :(
         if norm(rfi) > 0
@@ -229,8 +229,8 @@ while n < ceq.nMax % & cnt < 2
                 plot(1e3*tt.rho, rho, 'r.'); 
                 legend('Pulseq', 'pge2'); 
             else
-                plot(1e3*tt.ceq, abs(rf.ceq), 'r.'); 
-                legend('Pulseq', 'ceq'); 
+                plot(1e3*tt.psq, abs(rf.psq), 'r.'); 
+                legend('Pulseq', 'psq'); 
             end
         else
             cla(sax)
@@ -246,7 +246,7 @@ while n < ceq.nMax % & cnt < 2
             if ~isempty(xmlPath)
                 plot(1e3*tt.theta, theta, 'r.');
             else
-                plot(1e3*tt.ceq, angle(rf.ceq), 'r.'); 
+                plot(1e3*tt.psq, angle(rf.psq), 'r.'); 
             end
         else
             cla(sax)
@@ -286,7 +286,7 @@ while n < ceq.nMax % & cnt < 2
         if arg.plot
             input('Press Enter key to plot next segment ', "s");
         end
-        textprogressbar(n/ceq.nMax*100);
+        textprogressbar(n/psq.nMax*100);
         n = n2 + 1;
     else
         fprintf('Exiting\n');
@@ -294,5 +294,5 @@ while n < ceq.nMax % & cnt < 2
     end
 end
 
-textprogressbar((n-1)/ceq.nMax*100);
+textprogressbar((n-1)/psq.nMax*100);
 fprintf('\n');

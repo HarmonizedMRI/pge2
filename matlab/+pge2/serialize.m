@@ -1,19 +1,19 @@
-function writeceq(ceq, fn, varargin)
-% writeceq - Write a Ceq object to a binary file for execution on GE scanners
+function serialize(psq, fn, varargin)
+% serialize - Write a PulSeg object to a binary file for execution on GE scanners
 %
-% function writeceq(ceq, fn, ...)
+% function writeceq(psq, fn, ...)
 %
 % Either 'params' or 'sysGE' (kwargs) must be provided.
 % 
 % Inputs
-%   ceq       struct       Ceq sequence object, see seq2ceq.m
+%   psq       struct       PulSeg sequence object
 %   fn        string       Output file name (.pge file)
 %
 % Options
 %   sysGE        struct       System hardware info, see pge2.opts()
 %   params       struct       Various derived sequence parameters, obtained with:
-%                             >> params = pge2.check(ceq, sysGE).
-%                             If not specified, this script calls pge2.check(ceq, sysGE) for you.
+%                             >> params = pge2.check(psq, sysGE).
+%                             If not specified, this script calls pge2.check(psq, sysGE) for you.
 %   pislquant    [1]          Number of ADC events at start of scan for setting Rx gain (default = 1)
 %   gamma        [1]          Default: 42.576e6 (Hz/T)
 
@@ -28,11 +28,11 @@ arg = vararg_pair(arg, varargin);
 
 if ~isempty(arg.params)
     params = arg.params;
-    assert(strcmp(params.hash, DataHash(ceq)), ...
-        'hash mismatch: Run ''params = pge2.check(ceq, sysGE);'' again before calling this function');
+    assert(strcmp(params.hash, DataHash(psq)), ...
+        'hash mismatch: Run ''params = pge2.check(psq, sysGE);'' again before calling this function');
 else
     assert(~isempty(arg.sysGE), 'Either params or sysGE must be specified');
-    params = pge2.check(ceq, arg.sysGE);
+    params = pge2.check(psq, arg.sysGE);
 end
 
 % open output file
@@ -41,36 +41,36 @@ fid = fopen(fn, 'wb');  % big endian (network byte order)
 fwrite(fid, 47, 'int16');  % for checking endianness when reading 
 
 % write base blocks
-fwrite(fid, ceq.nParentBlocks, 'int16');
-for ii = 1:ceq.nParentBlocks
-    sub_writeblock(fid, ceq.parentBlocks(ii).block);
+fwrite(fid, psq.nParentBlocks, 'int16');
+for ii = 1:psq.nParentBlocks
+    sub_writeblock(fid, psq.parentBlocks(ii).block);
 end
 
 % write segment definitions
-fwrite(fid, ceq.nSegments, 'int16');
-for ii = 1:ceq.nSegments
-    sub_writesegment(fid, ceq.segments(ii), ceq.parentBlocks);  % write definition of one segment
+fwrite(fid, psq.nSegments, 'int16');
+for ii = 1:psq.nSegments
+    sub_writesegment(fid, psq.segments(ii), psq.parentBlocks);  % write definition of one segment
 end
 
 % write loop
-fwrite(fid, ceq.nMax, 'int32');
-fwrite(fid, size(ceq.loop,2), 'int16');   % nColumnsInLoopArray
-for ii = 1:size(ceq.loop,1)
-    fwrite(fid, ceq.loop(ii,:), 'float32');  % write in row-major order
+fwrite(fid, psq.nMax, 'int32');
+fwrite(fid, size(psq.loop,2), 'int16');   % nColumnsInLoopArray
+for ii = 1:size(psq.loop,1)
+    fwrite(fid, psq.loop(ii,:), 'float32');  % write in row-major order
 end
 
 % get max B1 and gradient in sequence and compare with inputs
 maxB1 = 0;
 maxGrad = 0;
-for n = 1:ceq.nMax
-    maxB1 = max(maxB1, abs(ceq.loop(n,3)));  % Hz
-    maxGrad = max([maxGrad abs(ceq.loop(n, [6 8 10]))]);
+for n = 1:psq.nMax
+    maxB1 = max(maxB1, abs(psq.loop(n,3)));  % Hz
+    maxGrad = max([maxGrad abs(psq.loop(n, [6 8 10]))]);
 end
 
-assert(abs(params.b1max*1e-4 - maxB1/arg.gamma) < 1e-7, 'params.b1max does''t match peak b1 in ceq.loop()');
+assert(abs(params.b1max*1e-4 - maxB1/arg.gamma) < 1e-7, 'params.b1max does''t match peak b1 in psq.loop()');
 
 err = 100 * abs(params.gmax - maxGrad/arg.gamma*1e2) / max(params.gmax, eps);
-assert(err < 1, sprintf('params.gmax does''t match peak gradient in ceq.loop() (%.1f%% difference)\n', err)); 
+assert(err < 1, sprintf('params.gmax does''t match peak gradient in psq.loop() (%.1f%% difference)\n', err)); 
     
 maxSlew = params.smax * arg.gamma * 10;   % Hz/m
 
@@ -79,19 +79,19 @@ fwrite(fid, 1, 'float32');  % maxRfPower, G^2 * sec. Not used.
 fwrite(fid, maxB1, 'float32');
 fwrite(fid, maxGrad, 'float32');        % maxGrad (Hz/m)
 fwrite(fid, maxSlew, 'float32');        % maxSlew (Hz/m/sec)
-fwrite(fid, ceq.duration, 'float32');   % duration
-fwrite(fid, ceq.nReadouts, 'int32');    % total number of ADC events in sequence
+fwrite(fid, psq.duration, 'float32');   % duration
+fwrite(fid, psq.nReadouts, 'int32');    % total number of ADC events in sequence
 fwrite(fid, arg.pislquant, 'int32');    % number ADC events at start of scan for setting receive gain in Auto Prescan
 
 % Determine number of blocks (rows) to use for
 % sliding window gradient/RF safety check
 n = 1;
-while n < min(ceq.nMax, arg.NMAXBLOCKSFORGRADHEATCHECK)
-    i = ceq.loop(n, 1);
-    %nBlocksForGreadHeatCheck = nBlocksForGreadHeatCheck + ceq.segments(i).nBlocksInSegment;
-    n = n + ceq.segments(i).nBlocksInSegment;
+while n < min(psq.nMax, arg.NMAXBLOCKSFORGRADHEATCHECK)
+    i = psq.loop(n, 1);
+    %nBlocksForGreadHeatCheck = nBlocksForGreadHeatCheck + psq.segments(i).nBlocksInSegment;
+    n = n + psq.segments(i).nBlocksInSegment;
     if n > arg.NMAXBLOCKSFORGRADHEATCHECK
-        n = n - ceq.segments(i).nBlocksInSegment;
+        n = n - psq.segments(i).nBlocksInSegment;
         break;
     end
 end
@@ -99,13 +99,13 @@ n = n - 1;
 fwrite(fid, n, 'int32');   
 
 %{
-    fread(&(ceq->maxRfPower), sizeof(float), 1, fid);
-    fread(&(ceq->maxB1), sizeof(float), 1, fid);
-    fread(&(ceq->maxGrad), sizeof(float), 1, fid);
-    fread(&(ceq->maxSlew), sizeof(float), 1, fid);
-    fread(&(ceq->duration), sizeof(float), 1, fid);
-    fread(&(ceq->nReadouts), sizeof(int), 1, fid);
-    fread(&(ceq->nGain), sizeof(int), 1, fid);
+    fread(&(psq->maxRfPower), sizeof(float), 1, fid);
+    fread(&(psq->maxB1), sizeof(float), 1, fid);
+    fread(&(psq->maxGrad), sizeof(float), 1, fid);
+    fread(&(psq->maxSlew), sizeof(float), 1, fid);
+    fread(&(psq->duration), sizeof(float), 1, fid);
+    fread(&(psq->nReadouts), sizeof(int), 1, fid);
+    fread(&(psq->nGain), sizeof(int), 1, fid);
 %}
 
 fclose(fid);

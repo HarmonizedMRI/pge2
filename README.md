@@ -23,10 +23,14 @@ Key Features:
 
 ## Installation
 
-Clone the repository and add to your MATLAB path:
-
+Clone the repository:
 ```bash
 git clone https://github.com/HarmonizedMRI/pge2.git
+```
+
+Setup up your MATLAB path:
+```
+>> addpath pge2/matlab   % +pge2 namespace
 ```
 
 ---
@@ -40,7 +44,7 @@ Overview:
 
 2. Convert to PulSeg intermediate representation
     ```matlab
-    psq = pulseg.fromSeq('path/to/sequence.seq');   % Generate psq in PulSeg
+    psq = pulseg.fromSeq('path/to/sequence.seq'); 
     ```
 
 3.  Export to binary file for execution on GE scanners using the pge2 interpreter
