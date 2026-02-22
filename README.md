@@ -2,7 +2,6 @@
   <img src="assets/logo.svg" alt="pulseg logo" width="320"/>
 </p>
 
-
 🛠️ Under Development
 
 **Serialization & utility toolkit for exporting [PulSeg](https://github.com/HarmonizedMRI/pulseg) intermediate representations to GE MRI platforms**
