@@ -3,12 +3,14 @@ function psq = translateFOVrf(psq, offset)
 %
 % function psq = translateFOVrf(psq, offset)
 %
-% Adds frequency modulation to the base blocks, according to 'offset'.
+% Adds frequency modulation to the base blocks of a PulSeq sequence, according to 'offset'.
 % This assumes that the gradient amplitude doesn't change across base block instances.
+% This function also assumes that any RF pulse containing gradients are arbitrary
+% (uniformly sampled) waveforms.
 %
 % Inputs
-%   psq     struct       PulSeg sequence object, see pulseg.fromSeq()
-%   offset  [3]          shift in logical x, y, z coordinates (m)
+%   psq        struct       PulSeg sequence object, see pulseg.fromSeq()
+%   offset     [3]          shift in logical x, y, z coordinates (m)
 %
 % Ouput
 %   psq     struct       Same as input, except with added frequency modulation
@@ -20,7 +22,6 @@ for ib = 1 : psq.nParentBlocks
 
     if ~isempty(b.rf) 
         % Get rf waveform and times
-        %b.rf.signal = b.rf.signal .* exp(1i * 1e-3);
         seq = mr.Sequence();  
         seq.addBlock(b.rf, b.gx, b.gy, b.gz);
         w = seq.waveforms_and_times(true);
