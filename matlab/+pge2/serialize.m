@@ -16,6 +16,7 @@ function serialize(psq, fn, varargin)
 %                             If not specified, this script calls pge2.check(psq, sysGE) for you.
 %   pislquant    [1]          Number of ADC events at start of scan for setting Rx gain (default = 1)
 %   gamma        [1]          Default: 42.576e6 (Hz/T)
+%   checkHash    boolean      Ignore hash mismatch between params and psq object. Default: true
 
 % parse optional inputs
 arg.sysGE = [];
@@ -23,13 +24,20 @@ arg.params = [];
 arg.pislquant = 1;  
 arg.gamma = 42.576e6;    % Hz/T
 arg.NMAXBLOCKSFORGRADHEATCHECK = 40000; 
+arg.checkHash = true;
 
 arg = vararg_pair(arg, varargin);
 
 if ~isempty(arg.params)
     params = arg.params;
-    assert(strcmp(params.hash, DataHash(psq)), ...
-        'hash mismatch: Run ''params = pge2.check(psq, sysGE);'' again before calling this function');
+    if arg.checkHash
+        assert(strcmp(params.hash, DataHash(psq)), ...
+            'hash mismatch: Run ''params = pge2.check(psq, sysGE);'' again before calling this function');
+    else
+        if ~strcmp(params.hash, DataHash(psq))
+            warning('Hash mismatch between params and psq objects. This is ok if due to an applied FOV offset or similar benign modification.');
+        end
+    end
 else
     assert(~isempty(arg.sysGE), 'Either params or sysGE must be specified');
     params = pge2.check(psq, arg.sysGE);
