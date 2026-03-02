@@ -29,6 +29,7 @@ for ib = 1 : psq.nParentBlocks
         rf.signal = w{4}(2,2:end-1);
 
         % Calculate frequency modulation waveform corresponding to requested offset
+        % See Magland et al Magn Reson Med 56 (2006) 230-233.
         f = zeros(size(rf.t));   % Hz
         for d = 1:3               % loop over gradient axes
             if length(w{d}) > 0
