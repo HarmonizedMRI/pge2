@@ -140,7 +140,7 @@ linkaxes([ax{1} ax{2} ax{3} ax{4} ax{5} ax{6}], 'x');  % common zoom setting (al
 
 % set misc figure properties
 subplot(nSubPlots,1,1);
-msg = sprintf('Displaying blocks %d:%d.\n', nFirst, n2);
+msg = sprintf('Displaying blocks %d:%d. PNS weights = [%.2f %.2f %.2f]\n', nFirst, n2, arg.PNSwt(1), arg.PNSwt(2), arg.PNSwt(3));
 if ~arg.rotate
     msg = sprintf('%sLogical coordinates -- gradient rotations not shown.\n', msg);
 end
