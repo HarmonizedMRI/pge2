@@ -29,7 +29,12 @@ params.b1max = 0;      % max RF amplitude
 params.gmax = 0;       % max single-axis gradient amplitude [G/cm]
 params.smax = 0;       % max single-axis slew rate in sequence, G/cm/ms
 params.PNSwt = arg.PNSwt;
-params.hash = DataHash(psq);
+try
+    params.hash = DataHash(psq);
+catch ME
+    error(sprintf('%s\nAdd DataHash to path, e.g.:\n >> addpath(''genpath(pulseg/matlab/third_party''))\n', ME.message));
+end
+    
 
 % Check parent block timing.
 % Parent blocks are 'virtual' (waveform amplitudes are arbitrary/normalized), so only check
