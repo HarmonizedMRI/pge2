@@ -211,8 +211,11 @@ while n < psq.nMax % & cnt < 2
             else
                 I = find(abs(rf.psq) > 1e-12);
                 tmp_rf_psq = rf.psq(I);
+                tmp_tt_psq = tt.psq(I);
                 I = find(abs(rf.seq) > 1e-12);
                 tmp_rf_seq = rf.seq(I);
+                tmp_tt_seq = tt.seq(I);
+                assert(norm(tmp_tt_seq(:) - tmp_tt_psq(:)) < 1e-7, 'RF timing in seq and psq objects do not match');
                 if length(tmp_rf_psq) ~= length(tmp_rf_seq)
                     error('Number of non-zero RF waveform samples in seq and psq objects do not match');
                 end
