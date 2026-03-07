@@ -27,7 +27,11 @@ function ok = validate(psq, sys_ge, seq, xmlPath, varargin)
 % the main failure modes we're after are things like conj/sign change, and gross timing offsets
 arg.row = 'all';      
 arg.plot = false;   
-arg.threshRFper = 1;  
+if isempty(xmlPath)
+    arg.threshRFper = 1;    % agreement should be essentially perfect
+else
+    arg.threshRFper = 10;    % allow some slack due to interpolation (?)
+end
 arg.b1PlotLim = sys_ge.b1_max;  % Gauss
 
 arg = vararg_pair(arg, varargin);   % in ../
@@ -202,12 +206,32 @@ while n < psq.nMax % & cnt < 2
         I = find(abs(rf.seq) > 1e-12);
         if ~isempty(I)
             if ~isempty(xmlPath)
+                % Compare two waveforms (Pulseq and WTools output) sampled at different times
                 % TODO: also compare phase
-                I = find(abs(rf.pge2) > 1e-12);
-                tmp_rf_pge2 = rf.pge2(I);
-                I = find(abs(rf.seq) > 1e-12);
-                tmp_rf_seq = rf.seq(I);
-                err = 100 * rmse(abs(tmp_rf_pge2(:)), abs(tmp_rf_seq(:))) / rmse(tmp_rf_pge2(:), 0*tmp_rf_seq(:));
+
+                t1 = tt.pge2; y1 = rf.pge2;
+                t2 = tt.seq;  y2 = rf.seq;
+
+                % Make times unique
+                t1 = t1(:) + 1e-12*(0:numel(t1)-1)';
+                t2 = t2(:) + 1e-12*(0:numel(t2)-1)';
+
+                % Overlapping time range
+                t_min = max(min(t1), min(t2));
+                t_max = min(max(t1), max(t2));
+
+                common_t = linspace(t_min, t_max, round((t_max-t_min)/1e-6));
+
+                y1_common = interp1(t1, y1, common_t, 'linear');
+                y2_common = interp1(t2, y2, common_t, 'linear');
+
+                rms_err = sqrt(mean((abs(y1_common) - abs(y2_common)).^2));
+                y1_std = std(abs(y1_common));
+                if y1_std > 0
+                    err = rms_err / y1_std * 100;  % NRMSE
+                else
+                    err = 0;
+                end
             else
                 I = find(abs(rf.psq) > 1e-12);
                 tmp_rf_psq = rf.psq(I);
@@ -215,10 +239,10 @@ while n < psq.nMax % & cnt < 2
                 I = find(abs(rf.seq) > 1e-12);
                 tmp_rf_seq = rf.seq(I);
                 tmp_tt_seq = tt.seq(I);
-                assert(norm(tmp_tt_seq(:) - tmp_tt_psq(:)) < 1e-7, 'RF timing in seq and psq objects do not match');
                 if length(tmp_rf_psq) ~= length(tmp_rf_seq)
                     error('Number of non-zero RF waveform samples in seq and psq objects do not match');
                 end
+                assert(norm(tmp_tt_seq(:) - tmp_tt_psq(:)) < 1e-7, 'RF timing in seq and psq objects do not match');
                 err = 100 * rmse(abs(tmp_rf_psq(:)), abs(tmp_rf_seq(:))) / rmse(tmp_rf_psq(:), 0*tmp_rf_seq(:));
             end
         end
