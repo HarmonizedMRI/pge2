@@ -234,7 +234,7 @@ while n < psq.nMax % & cnt < 2
         cla(sax);
         hold(sax, 'on');
         if length(rf.seq) > 0
-            plot(1e3*tt.seq, abs(rf.seq), 'black.');
+            plot(1e3*tt.seq, abs(rf.seq), 'black');
             hold on
             if ~isempty(xmlPath)
                 plot(1e3*tt.rho, rho, 'r.'); 
