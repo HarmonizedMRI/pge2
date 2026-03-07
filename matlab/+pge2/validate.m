@@ -27,11 +27,7 @@ function ok = validate(psq, sys_ge, seq, xmlPath, varargin)
 % the main failure modes we're after are things like conj/sign change, and gross timing offsets
 arg.row = 'all';      
 arg.plot = false;   
-if isempty(xmlPath)
-    arg.threshRFper = 1;    % agreement should be essentially perfect
-else
-    arg.threshRFper = 10;    % allow some slack due to interpolation (?)
-end
+arg.threshRFper = 1; 
 arg.b1PlotLim = sys_ge.b1_max;  % Gauss
 
 arg = vararg_pair(arg, varargin);   % in ../
@@ -225,10 +221,11 @@ while n < psq.nMax % & cnt < 2
                 y1_common = interp1(t1, y1, common_t, 'linear');
                 y2_common = interp1(t2, y2, common_t, 'linear');
 
-                rms_err = sqrt(mean((abs(y1_common) - abs(y2_common)).^2));
-                y1_std = std(abs(y1_common));
-                if y1_std > 0
-                    err = rms_err / y1_std * 100;  % NRMSE
+                y_diff = abs(y1_common) - abs(y2_common);
+                y_diff = y_diff(2:end-1);  % ignore end samples (error can be large)
+
+                if max(abs(y1_common)) > 0
+                    err = sqrt(mean(y_diff.^2))/ max(abs(y1_common)) * 100;  % nrmse
                 else
                     err = 0;
                 end
