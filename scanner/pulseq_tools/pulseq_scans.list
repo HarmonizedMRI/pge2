@@ -1,6 +1,0 @@
-# PulSeq protocol slots
-#
-# opuser1  scan     description
-
-1          gre2d    2D GRE demo
-3          b0       field map
