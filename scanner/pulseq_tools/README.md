@@ -6,7 +6,7 @@ FOV slice offsets based on the GE prescription UI, using the MATLAB Runtime.
 ## Overview
 
 Scanner workflow:
-1. Create the file `pulseq_scans.list`. 
+1. Create the file `pulseq_scans.list`, in a local (preferrably empty) directory of your choice. 
    This file contains a list of the PulSeg scan files (`.mat`) to which the FOV shift will be applied.
    Example:
    ```text
@@ -25,8 +25,8 @@ Scanner workflow:
     $ ./pulseq_shift_fov.sh pulseq_scans.list Rx.txt
     ```
    This will create new `.entry` and `.pge` files.
-5. Copy the `.entry` files to `/srv/nfs/psd/usr/psd/pulseq/v7/sequences/` on the scanner host computer,
-   and copy the `.pge` files to the corresponding locations on the scanner host computer.
+5. Copy the `.entry` files to `/srv/nfs/psd/usr/psd/pulseq/v7/sequences/` on the scanner host computer.
+   You do not need to move the `.pge` files -- the `.entry` file points to the current working directory.
 6. Prescribe your Pulseq (`pge2`) scans, and for each scan, copy the prescription from Step 1
    (this will copy the prescribed rotation and scanner table location).
    This can be done automatically by linking multiple Series together.

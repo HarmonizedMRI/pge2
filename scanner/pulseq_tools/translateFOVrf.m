@@ -29,5 +29,5 @@ pge2.translateFOVrf(psq, [0 0 z_offset*1e-2]);
 
 % write .pge file and corresponding .entry file
 pge2.serialize(psq, output_file, 'pislquant', pislquant, 'params', params);
-pge2.writeentryfile(opuser1, output_file);
+pge2.writeentryfile(opuser1, output_file, 'path', pwd);
 
