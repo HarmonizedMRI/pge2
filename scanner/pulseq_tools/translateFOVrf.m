@@ -9,7 +9,7 @@ function translateFOVrf(seq_name, Rxfile, opuser1, output_file)
 %
 % Inputs
 %   seq_name          string     .mat file name containing PulSeg sequence (psq, params, pislquant)
-%   Rxfile   string     Text file containing output of `printSHM`, e.g., `printSHM > Rx.txt`
+%   Rxfile            string     Text file containing output of `printSHM`, e.g., `printSHM > Rx.txt`
 %   opuser1           int        Determines pge<opuser1>.entry file name
 %   output_file       string     .pge output file name
 
@@ -21,7 +21,7 @@ z_offset = pge2.utils.computesliceoffset(Rxfile);   % cm
 
 % load PulSeg sequence and apply offset
 try
-    load(seq_name + '.mat')  % psq, params, pislquant
+    load(strcat(seq_name, '.mat'));  % psq, params, pislquant
 catch ME
     error(ME.message);
 end

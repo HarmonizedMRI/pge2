@@ -1,25 +1,46 @@
 # Interactive FOV translation for Pulseq/PulSeg sequences on GE scanners
 
 This directory provides a scanner-side workflow for automatically translating 
-PulSeq FOV offsets based on the GE prescription UI, using the MATLAB Runtime.
+FOV slice offsets based on the GE prescription UI, using the MATLAB Runtime.
 
 ## Overview
 
-**Goal:** Set FOV translation automatically on the scanner based on the usual UI prescription
+Scanner workflow:
+1. Create the file `pulseq_scans.list`. 
+   This file contains a list of the PulSeg scan files (`.mat`) to which the FOV shift will be applied.
+   Example:
+   ```text
+    # Example pulse_scans.list file
+    # opuser1  scan     description
+    48         gre2d    2D GRE demo
+    49         b0       field map
+    50         t1map    T1 mapping
+   ```
+   For each scan, a `.mat` file must exist that contains the `psq` object, 
+   a`params` struct and `pislquant`.
+2. Prescribe any sequence, e.g., built-in 2D SPGR
+3. Apply prescribed slice offset to all scans in the `.list` file:
+    ```bash
+    $ printSHM > Rx.txt
+    $ ./pulseq_shift_fov.sh pulseq_scans.list Rx.txt
+    ```
+   This will create new `.entry` and `.pge` files.
+5. Copy the `.entry` files to `/srv/nfs/psd/usr/psd/pulseq/v7/sequences/` on the scanner host computer,
+   and copy the `.pge` files to the corresponding locations on the scanner host computer.
+6. Prescribe your Pulseq (`pge2`) scans, and for each scan, copy the prescription from Step 1
+   (this will copy the prescribed rotation and scanner table location).
+   This can be done automatically by linking multiple Series together.
+   Run the `pge2` scans as usual.
 
-We'll do this by running `pge2.translateFOVrf()` on scanner automatically.
-This will make use of the Matlab runtime which is already installed on the scanner.
-Specially, we will create a function `translateFOVrf.m` that:
-1. loads a PulSeg object from a `.mat` file, 
-2. applies the FOV offset, and
-3. writes the resulting sequence to a `.pge` file for execution.
-
-We will obtain the FOV offset from the output of `printSHM` 
-on the scanner (a built-in command).
-
-Here the sequence name is chosen to be `gre2d` to make the description concrete.
-
-This requires **Matlab R2022a** currently.
+**What goes on under the hood:**  
+For each scan, the function `translateFOVrf.m` is executed.
+This does several things:
+```
+1. loads the PulSeg object from a `.mat` file, 
+2. applies the FOV offset using `pge2.translateFOVrf()`, 
+3. writes the resulting sequence to a `_fov.pge` file, and
+4  creates the corresponding `.entry` file using `pge2.writeentryfile`.
+```
 
 
 ## Compile translateFOVrf.m and test it
@@ -51,44 +72,9 @@ This requires **Matlab R2022a** currently.
     $ ./run_translateFOVrf.sh /opt/mathworks_matlab_runtime_r2022a/root/v912 gre2d 
     ```
 
-## Scanner workflow
-
-Our eventual goal is to have `run_translateFOVrf.sh` run automatically in the background,
-so that the user experience is the same as for product sequences.
-For now, some steps are manual (on the command line).
-
-1. **Prescribe FOV:**
-   1. For any pge2 sequence, prescribe the desired FOV offset and rotation.
-
-2. **Create the file `pulseq_scans.txt`:** 
-   This file contains a list of the PulSeg scan files (`.mat`) to which the FOV shift will be applied.
-   Example:
-   ```text
-   # Comment/empty lines are ok
-   gre2d.mat
-
-   # The .mat extension is optional
-   b0
-   ```
-
-3. **Create FOV-shifted `.pge` files:**
-   1. Copy all `.mat` files listed in `pulseq_scans.txt` to the current folder.
-   2. Aply the shift:
-   ```bash
-   $ ./shift_fov_pulseq pulseq_scans.txt
-   ```
-   This will call `printSHM > Rx.txt`, then create a `.pge` file for each scan in `pulseq_scans.txt`.
-
-4. **Prescribe and run each scan:**
-   1. As usual, create a `pge<n>.entry` file for each of the `.pge` files you just created.
-   2. For each scan, start a new Series and 
-      copy the prescription from the pge2 sequence in step 1 
-      (this will apply the desired rotation).
-      This can be done automatically by linking the Series.
-      Then run the scan as usual.
-
-
 ## Matlab runtime info
+
+This requires **Matlab R2022a** currently.
 
 ### Scanner
 
