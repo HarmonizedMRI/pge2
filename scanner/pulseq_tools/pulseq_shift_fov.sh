@@ -15,7 +15,7 @@
 MATLAB_RUNTIME_DIR=/opt/mathworks_matlab_runtime_r2022a/root/v912 
 
 # Matlab path for testing on your personal computer
-MATLAB_RUNTIME_DIR=/usr/local/MATLAB/R2024b
+#MATLAB_RUNTIME_DIR=/usr/local/MATLAB/R2024b
 
 SCAN_LIST="$1"
 
