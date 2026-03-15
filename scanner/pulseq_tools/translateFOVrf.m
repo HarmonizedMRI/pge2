@@ -17,7 +17,8 @@ function translateFOVrf(seq_name, Rxfile, opuser1, output_file)
 seq_name = erase(seq_name, {'.bin', '.pge2', '.pge', '.seq', '.mat'});
 
 % read z offset
-z_offset = pge2.utils.computesliceoffset(Rxfile)   % mm
+z_offset = pge2.utils.computesliceoffset(Rxfile);   % mm
+fprintf('z_offset = %.2f mm\n', z_offset);
 
 % load PulSeg sequence and apply offset
 try
@@ -28,6 +29,6 @@ end
 psq = pge2.translateFOVrf(psq, [0 0 z_offset*1e-3]);
 
 % write .pge file and corresponding .entry file
-pge2.serialize(psq, output_file, 'pislquant', pislquant, 'params', params);
+pge2.serialize(psq, output_file, 'pislquant', pislquant, 'params', params, 'checkHash', false);
 pge2.writeentryfile(opuser1, output_file, 'path', pwd);
 
