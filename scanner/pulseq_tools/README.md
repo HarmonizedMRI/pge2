@@ -1,5 +1,11 @@
 # Prescribe FOV offset interactively on the scanner
 
+This workflow is part of the 
+[PulSeg](https://github.com/HarmonizedMRI/pulseg)
+and
+[pge2](https://github.com/HarmonizedMRI/pge2)
+Pulseq-to-GE interpreter toolkit.
+
 ## Overview
 
 This workflow allows Pulseq-based sequences to use the
@@ -50,7 +56,6 @@ D --> E
    installed permanently without interfering with other Pulseq scans.  
    The directory should now contain the following:
    ```
-   ## Example protocol directory structure
    example_protocol/
    ├── pulseq_scans.list
    ├── gre2d.mat
@@ -67,10 +72,13 @@ D --> E
    $ printSHM > Rx.txt
    $ ./pulseq_shift_fov.sh pulseq_scans.list Rx.txt
    ```
-   This will create new `.entry` and `_fov.pge` files.
-4. Copy the `.entry` files to `/srv/nfs/psd/usr/psd/pulseq/v7/sequences/` on the scanner host computer.
+   This will create new `.entry` and `.pge` files.
+   Note that the output sequence files are written as `<scan>_fov.pge`.
+4. Copy the `.entry` files to the Pulseq interpreter sequence directory,
+   typically: `/srv/nfs/psd/usr/psd/pulseq/v7/sequences/`.
    You do not need to move the `_fov.pge` files -- the `.entry` file points to the current working directory.
-5. Prescribe your Pulseq (`pge2`) scans, and for each scan, copy the prescription from Step 1
+5. Prescribe the Pulseq (`pge2`) scans corresponding to the installed `.entry` files.
+   For each scan, copy the prescription from Step 1
    (this will copy the prescribed rotation and scanner table location).
    This can be done automatically by linking multiple Series together.
    Run the `pge2` scans as usual.
@@ -81,7 +89,7 @@ This does several things:
 1. loads the PulSeg object from a `.mat` file, 
 2. applies the FOV offset using `pge2.translateFOVrf()`, 
 3. writes the resulting sequence to a `_fov.pge` file, and
-4  creates the corresponding `.entry` file using `pge2.writeentryfile`.
+4.  creates the corresponding `.entry` file using `pge2.writeentryfile`.
 
  
 ## Preparing the `.mat` files
