@@ -28,20 +28,19 @@ flowchart LR
 A[Prescribe scan on GE UI]
 B[printSHM -> Rx.txt]
 C[pulseq_shift_fov.sh]
-D[translateFOVrf_batch executable]
-E[.pge + .entry files]
+D[.pge + .entry files]
 
 A --> B
 B --> C
 C --> D
-D --> E
 ```
 
 
 ## Scanner workflow
 
 1. Create the file `pulseq_scans.list`, in a local directory of your choice on the scanner. 
-   This file contains a list of the PulSeg scan files (`.mat`) to which the FOV shift will be applied.
+   In this example, this directory is `/export/home/sdc/example/`.
+   The `.list` file contains a list of the PulSeg scan files (`.mat`) to which the FOV shift will be applied.
    Example:
    ```text
    # Example pulseq_scans.list file
@@ -56,7 +55,7 @@ D --> E
    installed permanently without interfering with other Pulseq scans.  
    The directory should now contain the following:
    ```
-   example_protocol/
+   /export/home/sdc/example/
    ├── pulseq_scans.list
    ├── gre2d.mat
    ├── b0.mat
@@ -64,7 +63,6 @@ D --> E
    ├── pulseq_shift_fov.sh
    ├── run_translateFOVrf_batch.sh
    ├── translateFOVrf_batch
-   ├── translateFOVrf
    ```
 2. Prescribe any sequence, e.g., built-in 2D SPGR oblique.
 3. Apply the prescribed FOV translation to all scans in the `.list` file:
@@ -74,9 +72,15 @@ D --> E
    ```
    This will create new `.entry` and `.pge` files.
    Note that the output sequence files are written as `<scan>_fov.pge`.
-4. Copy the `.entry` files to the Pulseq interpreter sequence directory,
-   typically: `/srv/nfs/psd/usr/psd/pulseq/v7/sequences/`.
-   You do not need to move the `_fov.pge` files -- the `.entry` file points to the current working directory.
+4. Create symbolic links in `/srv/nfs/psd/usr/psd/pulseq/v7/` pointing
+   to your newly create local `.entry` files:
+   ```bash
+   $ pwd
+   /srv/nfs/psd/usr/psd/pulseq/v7
+   $ ln -s /export/home/sdc/example/pge48.entry .
+   $ ln -s /export/home/sdc/example/pge49.entry .
+   $ ln -s /export/home/sdc/example/pge50.entry .
+   ```
 5. Prescribe the Pulseq (`pge2`) scans corresponding to the installed `.entry` files.
    For each scan, copy the prescription from Step 1
    (this will copy the prescribed rotation and scanner table location).
