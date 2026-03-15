@@ -1,88 +1,159 @@
-# Interactive FOV translation for Pulseq/PulSeg sequences on GE scanners
-
-This directory provides a scanner-side workflow for automatically translating 
-FOV slice offsets based on the GE prescription UI, using the MATLAB Runtime.
+# Prescribe FOV offset interactively on the scanner
 
 ## Overview
 
-Scanner workflow:
-1. Create the file `pulseq_scans.list`, in a local (preferrably empty) directory of your choice. 
+This workflow allows Pulseq-based sequences to use the
+standard GE scanner prescription interface for **FOV translation and rotation**.
+
+The workflow automatically reads the prescribed FOV offset from the scanner
+(using `printSHM`) and applies it to the PulSeg sequence by calling
+`pge2.translateFOVrf()` via the MATLAB Runtime installed on the scanner.
+
+The result is a `.pge` sequence that reflects the prescribed FOV translation.
+
+Workflow summary:
+1. Prescribe a reference scan on the GE scanner.
+2. Run `printSHM > Rx.txt` to record the current prescription.
+3. Run `pulseq_shift_fov.sh` to apply the prescribed FOV translation to multiple Pulseq sequences.
+4. Run the generated `pge<n>.entry` and corresponding `.pge` sequences as usual.
+
+```mermaid
+flowchart LR
+A[Prescribe scan on GE UI]
+B[printSHM -> Rx.txt]
+C[pulseq_shift_fov.sh]
+D[translateFOVrf_batch executable]
+E[.pge + .entry files]
+
+A --> B
+B --> C
+C --> D
+D --> E
+```
+
+
+## Scanner workflow
+
+1. Create the file `pulseq_scans.list`, in a local directory of your choice on the scanner. 
    This file contains a list of the PulSeg scan files (`.mat`) to which the FOV shift will be applied.
    Example:
    ```text
-    # Example pulse_scans.list file
-    # opuser1  scan     description
-    48         gre2d    2D GRE demo
-    49         b0       field map
-    50         t1map    T1 mapping
+   # Example pulseq_scans.list file
+   # opuser1     scan            description
+   48            gre2d.mat       2D GRE demo
+   49            b0.mat          field map
+   50            t1map.mat       T1 mapping
    ```
-   For each scan, a `.mat` file must exist that contains the `psq` object, 
-   a`params` struct and `pislquant`.
-2. Prescribe any sequence, e.g., built-in 2D SPGR
-3. Apply prescribed slice offset to all scans in the `.list` file:
-    ```bash
-    $ printSHM > Rx.txt
-    $ ./pulseq_shift_fov.sh pulseq_scans.list Rx.txt
-    ```
-   This will create new `.entry` and `.pge` files.
-5. Copy the `.entry` files to `/srv/nfs/psd/usr/psd/pulseq/v7/sequences/` on the scanner host computer.
-   You do not need to move the `.pge` files -- the `.entry` file points to the current working directory.
-6. Prescribe your Pulseq (`pge2`) scans, and for each scan, copy the prescription from Step 1
+   The `opuser1` column specifies the Pulseq sequence slot used by the GE Pulseq
+   interpreter sequence (`pge<opuser1>.entry`).
+   GE protocols store this integer value, allowing Pulseq protocols to be
+   installed permanently without interfering with other Pulseq scans.  
+   The directory should now contain the following:
+   ```
+   ## Example protocol directory structure
+   example_protocol/
+   ├── pulseq_scans.list
+   ├── gre2d.mat
+   ├── b0.mat
+   ├── t1map.mat
+   ├── pulseq_shift_fov.sh
+   ├── run_translateFOVrf_batch.sh
+   ├── translateFOVrf_batch
+   ├── translateFOVrf
+   ```
+2. Prescribe any sequence, e.g., built-in 2D SPGR oblique.
+3. Apply the prescribed FOV translation to all scans in the `.list` file:
+   ```bash
+   $ printSHM > Rx.txt
+   $ ./pulseq_shift_fov.sh pulseq_scans.list Rx.txt
+   ```
+   This will create new `.entry` and `_fov.pge` files.
+4. Copy the `.entry` files to `/srv/nfs/psd/usr/psd/pulseq/v7/sequences/` on the scanner host computer.
+   You do not need to move the `_fov.pge` files -- the `.entry` file points to the current working directory.
+5. Prescribe your Pulseq (`pge2`) scans, and for each scan, copy the prescription from Step 1
    (this will copy the prescribed rotation and scanner table location).
    This can be done automatically by linking multiple Series together.
    Run the `pge2` scans as usual.
 
-**What goes on under the hood:**  
+### What goes on under the hood
 For each scan, the function `translateFOVrf.m` is executed.
 This does several things:
-```
 1. loads the PulSeg object from a `.mat` file, 
 2. applies the FOV offset using `pge2.translateFOVrf()`, 
 3. writes the resulting sequence to a `_fov.pge` file, and
 4  creates the corresponding `.entry` file using `pge2.writeentryfile`.
+
+ 
+## Preparing the `.mat` files
+
+Each `.mat` file must contain a `psq` object, 
+a `params` struct and `pislquant`.
+Example:
+```matlab
+>> psq = pulseg.fromSeq('gre2d.seq');
+>> params = pge2.check(psq, sys_ge, ...);
+>> pislquant = 10;   % number of ADC events for receive gain calibration in Auto Prescan
+>> save gre2d.mat psq params pislquant
 ```
 
+For more details on working with these functions, see the 'official' PulSeg/pge2 demo sequence at
+https://github.com/HarmonizedMRI/SequenceExamples-GE/tree/main/pge2/2DGRE.
 
-## Compile translateFOVrf.m and test it
+
+## GE prescription data (`printSHM`)
+
+The scanner command-line utility `printSHM` reads the prescribed slice position, orientation, and FOV
+directly from the GE shared memory:
+```bash
+printSHM > Rx.txt
+```
+The `translateFOVrf` function uses these values to compute the
+corresponding FOV translation for the PulSeg sequence via
+```matlab
+pge2.translateFOVrf()
+```
+This allows Pulseq sequences to follow the standard GE prescription
+workflow, including:
+
+* slice offsets
+* oblique rotations
+* table position
+
+
+## Building the MATLAB executable
 
 1. **Compile:**
-    On local computer with R2022a installed:
-    ```matlab
-    >> mcc -m translateFOVrf.m
-    ```
-
-2. **Create `gre2d.mat`:**
-   Create a `psq` object in the usual way (e.g., the 2D GRE official demo sequence). 
-   Save it along with a couple of other parameters:
+   On local computer with R2022a installed:
    ```matlab
-   >> save gre2d psq params pislquant
+   >> mcc -m translateFOVrf_batch.m
    ```
 
-3. **Create `Rx.txt`:**
-   On scanner, type `printSHM > Rx.txt`
-
-3. **Test on local computer:**
+2. **Test on local computer:**
    To run on local computer command line (Linux), for testing:
-    ```bash
-    $ ./run_translateFOVrf.sh /usr/local/MATLAB/R2022a gre2d  # Runs using Matlab instead of the runtime
-    ```
+   1. Set `MATLAB_RUNTIME_DIR` in `pulseq_shift_fov.sh`
+   2. Obtain an example output of `printSHM > Rx.txt` on the scanner.
+   3. Run the script:
+      ```bash
+      $ ./pulseq_shift_fov.sh pulseq_scans.list Rx.txt
+      ```
+   This should produce a set of `.pge` and `.entry` files.
 
-4. **Test on the scanner:**
-    ```bash
-    $ ./run_translateFOVrf.sh /opt/mathworks_matlab_runtime_r2022a/root/v912 gre2d 
-    ```
+3. **Test on the scanner:**
+   Same as testing locally, except set the value of `MATLAB_RUNTIME_DIR` to point to
+   the runtime installation on the scanner, e.g., `/opt/mathworks_matlab_runtime_r2022a/root/v912`
 
-## Matlab runtime info
 
-This requires **Matlab R2022a** currently.
+## Developer setup
 
-### Scanner
+### Matlab runtime info
+
+#### Scanner
 
 On our GE UHP 3T, Matlab runtime is `/opt/mathworks_matlab_runtime_r2022a/root/v912/`
 
 > [!IMPORTANT] Therefore, the `.m` file must be compiled with Matlab R2022a.
 
-### Local installation (not needed but info is here if useful)
+#### Local installation (not needed but info is here if useful)
 
 ```matlab
 >> mcrinstaller
@@ -93,9 +164,7 @@ Downloading MATLAB Runtime installer. It may take several minutes...
     '/home/jon/.MathWorks/MatlabRuntimeCache/MCRInstaller24.2/MATLAB_Runtime_R2024b_Update_4_glnxa64.zip'
 ```
 
-## Matlab R2022a and Ubuntu 22.04 LTS installation
-
-### Ubuntu 22.04 LTS
+### Ubuntu 22.04 LTS installation
 
 Ubuntu 22.04 LTS seems to be the version most compatible with R2022a.
 
@@ -119,7 +188,7 @@ Software setup:
 * vim
 
 
-### Matlab R2022a
+### Matlab R2022a installation
 
 #### Files needed
 
@@ -127,7 +196,8 @@ Software setup:
 
 That's it -- no need to download license files since this is handled over the network during installation.
 
-#### Install
+#### Installation
+
 1. Mount R2022a\_Linux.iso (this file can reside on a USB stick)
 2. Allow root to access display
     ```bash
@@ -156,6 +226,3 @@ That's it -- no need to download license files since this is handled over the ne
     Signal Processing Toolbox                             Version 9.0         (R2022a)
     Wavelet Toolbox                                       Version 6.1         (R2022a)
     ```
-### FOV prescription example/test data
-
-`data.txt` contains output of `printSHM` for various prescriptions.
