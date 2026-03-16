@@ -1,3 +1,6 @@
+
+addpath ../../matlab
+
 % get Pulseq toolbox
 system('git clone git@github.com:pulseq/pulseq.git');
 addpath pulseq/matlab
