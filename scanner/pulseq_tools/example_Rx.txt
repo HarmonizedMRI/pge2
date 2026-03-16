@@ -1,0 +1,6 @@
+_groupCenter.r         =       0.000000
+_groupCenter.a         =       63.865348
+_groupCenter.s         =       6.442246
+_groupNormal_N.r       =       0.000000
+_groupNormal_N.a       =       1.000000
+_groupNormal_N.s       =       0.000000
