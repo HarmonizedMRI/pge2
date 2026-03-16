@@ -64,6 +64,7 @@ C --> D
    ├── run_translateFOVrf_batch.sh
    ├── translateFOVrf_batch
    ```
+   The 'batch' files are created with the MATLAB compiler, as described below.
 2. Prescribe any sequence, e.g., built-in 2D SPGR oblique.
 3. Apply the prescribed FOV translation to all scans in the `.list` file:
    ```bash
