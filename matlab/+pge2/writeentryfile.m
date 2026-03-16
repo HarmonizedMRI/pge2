@@ -26,6 +26,6 @@ seq_name = replace(seq_name, {'.seq', '.pge', '.mat'}, '');
 fid = fopen(['pge' num2str(n) '.entry'], 'wt');
 
 fprintf(fid, '1\n');
-fprintf(fid, '%s\n', [arg.path seq_name '.pge']);
+fprintf(fid, '%s\n', strcat(arg.path, seq_name, '.pge'));
 
 fclose(fid);

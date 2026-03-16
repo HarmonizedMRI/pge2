@@ -1,0 +1,7 @@
+# PulSeq protocol slots
+#
+# opuser1  scan     description
+
+21          gre2d    2D GRE demo/test scan
+22          b0       3D SPGR field mapping 
+23          t1map    3D SPGR variable flip angle T1 mapping
