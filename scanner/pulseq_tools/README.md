@@ -143,10 +143,9 @@ workflow, including:
 2. **Test on local computer:**
    To run on local computer command line (Linux), for testing:
    1. Set `MATLAB_RUNTIME_DIR` in `pulseq_shift_fov.sh`
-   2. Obtain an example output of `printSHM > Rx.txt` on the scanner.
-   3. Run the script:
+   2. Run the script with the provided `printSHM` file example:
       ```bash
-      $ ./pulseq_shift_fov.sh pulseq_scans.list Rx.txt
+      $ ./pulseq_shift_fov.sh pulseq_scans.list example_Rx.txt
       ```
    This should produce a set of `.pge` and `.entry` files.
 
