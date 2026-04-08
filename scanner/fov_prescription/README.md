@@ -74,7 +74,7 @@ C --> D
    This will create new `.entry` and `.pge` files.
    Note that the output sequence files are written as `<scan>_fov.pge`.
 4. Create symbolic links in `/srv/nfs/psd/usr/psd/pulseq/v7/` pointing
-   to your newly create local `.entry` files:
+   to your newly created local `.entry` files:
    ```bash
    $ pwd
    /srv/nfs/psd/usr/psd/pulseq/v7
@@ -138,6 +138,7 @@ workflow, including:
 1. **Compile:**
    On local computer with R2022a installed:
    ```matlab
+   >> setup;  
    >> mcc -m translateFOVrf_batch.m
    ```
 
