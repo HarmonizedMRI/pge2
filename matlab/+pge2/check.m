@@ -56,7 +56,7 @@ while n < psq.nMax
     i = psq.loop(n,1);  % segment index
     L = psq.loop(n:(n-1+psq.segments(i).nBlocksInSegment), :);  % dynamic info
     try
-        S = getsegmentinstance(psq, i, sysGE, L, 'rotate', true, 'interpolate', true);
+        S = getsegmentinstance(psq, i, sysGE, L, 'rotate', false, 'interpolate', true);
     catch ME
         error(sprintf('(n = %d, i = %d): %s\n', n, i, ME.message));
     end
