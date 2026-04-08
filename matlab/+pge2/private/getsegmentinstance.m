@@ -125,7 +125,7 @@ for j = 1:length(blockIDs)
             else
                 % arbitrary gradient or extended trapezoid
                 tt = g.tt;
-                wav = g.waveform/max(abs(g.waveform));  % normalized amplitude
+                wav = g.waveform/max([max(abs(g.waveform)) 1]);  % normalized amplitude
             end
 
             wav = L(j,grad_amp_indeces(iax)) / sysGE.gamma / 100 * wav;  % Gauss/cm
@@ -230,10 +230,10 @@ return
 function [tt, g] = sub_interp_grad(tt, g, dur, sysGE)
     % Interpolate gradients to uniform raster time (4 us)
     % Inputs:
-    %  tt      time samples before interpolation, arbitrary points (sec)
-    %  g       gradient sampled at tt (a.u.)
-    %  dur     total segment duration, including segment dead/ringdown times (sec)
-    %  sysGE   pge2 system struct, see opts.m
+    %  tt      [n]      time samples before interpolation, arbitrary points (sec)
+    %  g       [n]      gradient sampled at tt (a.u.)
+    %  dur     [1]      total segment duration, including segment dead/ringdown times (sec)
+    %  sysGE   struct   pge2 system struct, see opts.m
 
     dt = sysGE.GRAD_UPDATE_TIME;  % gradient raster time
 
