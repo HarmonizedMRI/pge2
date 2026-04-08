@@ -16,6 +16,7 @@ MATLAB_RUNTIME_DIR=/opt/mathworks_matlab_runtime_r2022a/root/v912
 
 # Matlab path for testing on your personal computer
 #MATLAB_RUNTIME_DIR=/usr/local/MATLAB/R2024b
+MATLAB_RUNTIME_DIR=/usr/local/MATLAB/R2022a
 
 SCAN_LIST="$1"
 
@@ -24,22 +25,8 @@ if [ ! -f "$SCAN_LIST" ]; then
     exit 1
 fi
 
-# Create Rx.txt from scanner SHM information
-if command -v printSHM >/dev/null 2>&1; then
-    echo "Generating Rx.txt using printSHM"
-    printSHM > Rx.txt
-else
-    echo "printSHM not found, skipping Rx.txt generation"
-fi
-
-# Prevent accidentally overwriting existing installed protocols
-ENTRY="pge${opuser1}.entry"
-if [ -f "$ENTRY" ]; then
-    echo "WARNING: $ENTRY already exists and will be overwritten"
-fi
-
 # Apply FOV shift and write .pge and .entry files
-./run_translateFOVrf_batch.sh "$MATLAB_RUNTIME_DIR" "$SCAN_LIST" "Rx.txt"
+./run_translateFOVrf_batch.sh "$MATLAB_RUNTIME_DIR" "$SCAN_LIST" "$2"
 
 echo "Done."
 
