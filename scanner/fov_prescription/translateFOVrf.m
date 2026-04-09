@@ -26,7 +26,11 @@ try
 catch ME
     error(ME.message);
 end
-psq = pge2.translateFOVrf(psq, [0 0 z_offset*1e-3]);
+try
+    psq = pge2.translateFOVrf(psq, [0 0 z_offset*1e-3]);
+catch ME
+    warning(sprintf('pge2.translateFOVrf failed -- this may happen for block pulses, which is typically ok'));
+end
 
 % write .pge file and corresponding .entry file
 pge2.serialize(psq, output_file, 'pislquant', pislquant, 'params', params, 'checkHash', false);
