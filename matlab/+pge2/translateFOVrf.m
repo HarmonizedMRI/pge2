@@ -15,6 +15,10 @@ function psq = translateFOVrf(psq, offset)
 % Ouput
 %   psq     struct       Same as input, except with added frequency modulation
 
+if all(offset == 0) | isempty(offset)
+    return;
+end
+
 % Loop over base blocks
 for ib = 1 : psq.nParentBlocks
 
@@ -32,7 +36,7 @@ for ib = 1 : psq.nParentBlocks
         % See Magland et al Magn Reson Med 56 (2006) 230-233.
         f = zeros(size(rf.t));   % Hz
         for d = 1:3               % loop over gradient axes
-            if length(w{d}) > 0
+            if length(w{d}) > 2   % ignore block pulses
                 g = interp1(w{d}(1,:), w{d}(2,:), rf.t);  % gradient waveform, Hz/m
                 f = f + g*offset(d);
             end
@@ -43,7 +47,9 @@ for ib = 1 : psq.nParentBlocks
         th_center = interp1(rf.t, th, b.rf.delay + b.rf.center);
 
         % Add phase modulation to RF pulse
-        psq.parentBlocks(ib).block.rf.signal = b.rf.signal .* exp(1i*(th(:) - th_center));
+        if ~any(isnan(th))
+            psq.parentBlocks(ib).block.rf.signal = b.rf.signal .* exp(1i*(th(:) - th_center));
+        end
 
         % visually check that RF phase at center is unchanged:
         %b2 = b;
