@@ -47,6 +47,10 @@ yLim.phs = pi;
 yLim.gx = max(abs(psq.loop(:,6)))/sys.gamma/100;   % Gauss/cm
 yLim.gy = max(abs(psq.loop(:,8)))/sys.gamma/100;   % Gauss/cm
 yLim.gz = max(abs(psq.loop(:,10)))/sys.gamma/100;   % Gauss/cm
+yLim.rf = max(yLim.rf,0.1);
+yLim.gx = max(yLim.gx, 1);
+yLim.gy = max(yLim.gy, 1);
+yLim.gz = max(yLim.gz, 1);
 
 % Loop through sequence segments and display 
 W.tic = [];  % block boundary times
