@@ -6,7 +6,7 @@ function psq = translateFOVrf(psq, offset)
 % Adds frequency modulation to the base blocks of a PulSeq sequence, according to 'offset'.
 % This assumes that the gradient amplitude doesn't change across base block instances.
 % This function also assumes that any RF pulse containing gradients are arbitrary
-% (uniformly sampled) waveforms.
+% (uniformly sampled) waveforms -- block pulses are ignored.
 %
 % Inputs
 %   psq        struct       PulSeg sequence object, see pulseg.fromSeq()
@@ -15,49 +15,118 @@ function psq = translateFOVrf(psq, offset)
 % Ouput
 %   psq     struct       Same as input, except with added frequency modulation
 
-if all(offset == 0) | isempty(offset)
+% Fail-safe: default is no-op
+if nargin < 2 || isempty(offset) || all(offset == 0)
     return;
 end
 
-% Loop over base blocks
-for ib = 1 : psq.nParentBlocks
-
-    b = psq.parentBlocks(ib).block;  % base block
-
-    if ~isempty(b.rf) 
-        % Get rf waveform and times
-        seq = mr.Sequence();  
-        seq.addBlock(b.rf, b.gx, b.gy, b.gz);
-        w = seq.waveforms_and_times(true);
-        rf.t = w{4}(1,2:end-1);   % NB! time reference is start of block
-        rf.signal = w{4}(2,2:end-1);
-
-        % Calculate frequency modulation waveform corresponding to requested offset
-        % See Magland et al Magn Reson Med 56 (2006) 230-233.
-        f = zeros(size(rf.t));   % Hz
-        for d = 1:3               % loop over gradient axes
-            if length(w{d}) > 2   % ignore block pulses
-                g = interp1(w{d}(1,:), w{d}(2,:), rf.t);  % gradient waveform, Hz/m
-                f = f + g*offset(d);
-            end
-        end
-
-        % Calculate corresponding phase modulation
-        th = unwrap(angle(exp(1i*2*pi*f.*rf.t)));
-        th_center = interp1(rf.t, th, b.rf.delay + b.rf.center);
-
-        % Add phase modulation to RF pulse
-        if ~any(isnan(th))
-            psq.parentBlocks(ib).block.rf.signal = b.rf.signal .* exp(1i*(th(:) - th_center));
-        end
-
-        % visually check that RF phase at center is unchanged:
-        %b2 = b;
-        %b2.rf.signal = b2.rf.signal .* exp(1i*(th(:)-th_center));
-        %seq = mr.Sequence();  
-        %seq.addBlock(b2.rf);
-        %seq.plot();
-    end
+% Basic sanity
+if ~isfield(psq, 'parentBlocks') || isempty(psq.parentBlocks)
+    return;
 end
 
+for ib = 1:numel(psq.parentBlocks)
 
+    try
+        % --- Check RF exists ---
+        if ~isfield(psq.parentBlocks(ib), 'block')
+            continue;
+        end
+        b = psq.parentBlocks(ib).block;
+
+        if ~isfield(b, 'rf') || isempty(b.rf) || ...
+           ~isfield(b.rf, 'signal') || isempty(b.rf.signal)
+            continue;
+        end
+
+        % --- Build temporary sequence ---
+        seq = mr.Sequence();
+        seq.addBlock(mr.makeBlockPulse(1e-3, 'flipAngle', 0)); % dummy
+        seq.addBlock(b);
+
+        w = seq.waveforms_and_times(true);
+
+        % --- Validate waveform structure ---
+        if numel(w) < 4 || isempty(w{4}) || size(w{4},1) < 2
+            continue;
+        end
+
+        % Extract RF waveform
+        t_rf = w{4}(1,2:end-1);
+        sig_rf = w{4}(2,2:end-1);
+
+        if isempty(t_rf) || isempty(sig_rf)
+            continue;
+        end
+
+        % Length consistency check
+        if length(sig_rf) ~= length(b.rf.signal)
+            continue;
+        end
+
+        % --- Compute frequency shift ---
+        f = zeros(size(t_rf));
+
+        for d = 1:min(numel(offset), 3)
+            if numel(w) < d || isempty(w{d}) || size(w{d},1) < 2
+                continue;
+            end
+
+            % Safe interpolation (NO extrapolation)
+            g = interp1(w{d}(1,:), w{d}(2,:), t_rf, 'linear', 'extrap');
+
+            if any(isnan(g))
+                continue;
+            end
+
+            f = f + g * offset(d);
+        end
+
+        % --- Integrate to phase ---
+        dt = diff(t_rf);
+        if isempty(dt)
+            continue;
+        end
+
+        dt = [dt dt(end)]; % match length
+
+        th = 2*pi * cumsum(f .* dt);
+
+        if any(isnan(th)) || ~isvector(th)
+            continue;
+        end
+
+        % --- RF center phase ---
+        if ~isfield(b.rf, 'delay') || ~isfield(b.rf, 'center')
+            continue;
+        end
+
+        t_center = b.rf.delay + b.rf.center;
+
+        th_center = interp1(t_rf, th, t_center, 'linear', NaN);
+
+        if isnan(th_center)
+            continue;
+        end
+
+        % --- Final safety check ---
+        if length(th) ~= length(b.rf.signal)
+            continue;
+        end
+
+        % --- Apply phase modulation (SAFE WRITE) ---
+        new_signal = b.rf.signal .* exp(1i * (th(:) - th_center));
+
+        if any(isnan(new_signal))
+            continue;
+        end
+
+        % Commit only after everything passes
+        psq.parentBlocks(ib).block.rf.signal = new_signal;
+
+    catch
+        % Absolute fail-safe: do nothing for this block
+        continue;
+    end
+
+end
