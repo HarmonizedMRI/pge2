@@ -34,15 +34,13 @@ for ib = 1:numel(psq.parentBlocks)
         end
         b = psq.parentBlocks(ib).block;
 
-        if ~isfield(b, 'rf') || isempty(b.rf) || ...
-           ~isfield(b.rf, 'signal') || isempty(b.rf.signal)
+        if ~isfield(b, 'rf') || isempty(b.rf) 
             continue;
         end
 
         % --- Build temporary sequence ---
         seq = mr.Sequence();
-        seq.addBlock(mr.makeBlockPulse(1e-3, 'flipAngle', 0)); % dummy
-        seq.addBlock(b);
+        seq.addBlock(b.rf, b.gx, b.gy, b.gz);
 
         w = seq.waveforms_and_times(true);
 
