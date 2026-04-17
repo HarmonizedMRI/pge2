@@ -16,7 +16,8 @@ function psq = translateFOVrf(psq, offset)
 %   psq     struct       Same as input, except with added frequency modulation
 
 % Fail-safe: default is no-op
-if nargin < 2 || isempty(offset) || all(offset == 0)
+if nargin < 2 || length(offset) ~= 3 || all(offset == 0)
+    warning('No frequency offset applied -- offset must be length-3 non-zero vector');
     return;
 end
 
@@ -44,8 +45,8 @@ for ib = 1:numel(psq.parentBlocks)
 
         w = seq.waveforms_and_times(true);
 
-        % --- Validate waveform structure ---
-        if numel(w) < 4 || isempty(w{4}) || size(w{4},1) < 2
+        % --- Validate waveform structure. Ignore block pulses. ---
+        if numel(w) < 4 || isempty(w{4}) || size(w{4},2) < 3
             continue;
         end
 
