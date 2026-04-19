@@ -20,6 +20,10 @@ seq_name = erase(seq_name, {'.bin', '.pge2', '.pge', '.seq', '.mat'});
 z_offset = pge2.utils.computesliceoffset(Rxfile);   % mm
 fprintf('z_offset = %.2f mm\n', z_offset);
 
+% read in-plane offset
+[x_offset,y_offset] = pge2.utils.computeInplaneOffset(Rxfile);
+fprintf('x_offset=%.2f mm, y_offset=%.2f mm\n',x_offset,y_offset);
+
 % load PulSeg sequence and apply offset
 try
     load(strcat(seq_name, '.mat'));  % psq, params, pislquant
@@ -27,7 +31,7 @@ catch ME
     error(ME.message);
 end
 try
-    psq = pge2.translateFOVrf(psq, [0 0 z_offset*1e-3]);
+    psq = pge2.translateFOVrf(psq, [x_offset*1e-3 y_offset*1e-3 z_offset*1e-3]);
 catch ME
     warning(sprintf('pge2.translateFOVrf failed -- this may happen for block pulses, which is typically ok'));
 end
