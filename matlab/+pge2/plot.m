@@ -4,7 +4,7 @@ function W = plot(psq, sys, varargin)
 % function W = plot(psq, sys, varargin)
 %
 % Inputs:
-%   psq     struct       Ceq sequence object, see seq2ceq.m
+%   psq     struct       Ceq sequence object, see pulseg.fromSeq()
 %   sys     struct       System hardware info, see pge2.opts()
 %
 % Input options:
