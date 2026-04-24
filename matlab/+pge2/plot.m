@@ -1,10 +1,10 @@
 function W = plot(psq, sys, varargin)
-% plot - Plot Ceq sequence object
+% plot - Plot PulSeg sequence object
 %
 % function W = plot(psq, sys, varargin)
 %
 % Inputs:
-%   psq     struct       Ceq sequence object, see pulseg.fromSeq()
+%   psq     struct       PulSeg sequence object, see pulseg.fromSeq()
 %   sys     struct       System hardware info, see pge2.opts()
 %
 % Input options:
