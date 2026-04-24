@@ -5,7 +5,7 @@ function W = plot(psq, sys, varargin)
 %
 % Inputs:
 %   psq     struct       Ceq sequence object, see seq2ceq.m
-%   sys     struct       System hardware info, see pge2.getsys()
+%   sys     struct       System hardware info, see pge2.opts()
 %
 % Input options:
 %  timeRange       [2]             Requested start and end times (sec). Actual plot will end on a segment boundary.
