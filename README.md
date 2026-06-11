@@ -13,27 +13,27 @@ This package implements the `+pge2` MATLAB namespace for exporting PulSeg-derive
 sequence representations to a binary file that can be consumed by the `pge2` GE
 interpreter.
 
-The current `pge2` tools operate on a legacy internal struct called `psg`. New PulSeg
+The current `pge2` tools operate on a legacy internal struct called `pge_ir`. New PulSeg
 development is moving toward the PulSeg 2.0-alpha intermediate representation
 (`pulseg_ir`). During this transition, `pge2` supports PulSeg 2.0-alpha through a
 compatibility adapter:
 
 ```matlab
 pulseg_ir = pulseg.import('path/to/sequence.seq');
-psg       = pge2.import(pulseg_ir);
+pge_ir    = pge2.import(pulseg_ir);
 ```
 
 where:
 
 - `pulseg_ir` is the PulSeg 2.0-alpha intermediate representation.
-- `psg` is the legacy pge2-compatible struct used by existing GE export/check/plot tools.
+- `pge_ir` is the legacy pge2-compatible struct used by existing GE export/check/plot tools.
 
 Key Features:
-- `pge2.import(pulseg_ir)`: Convert PulSeg 2.0-alpha IR to legacy `psg` struct
-- `pge2.serialize(psg, 'output.pge')`: Export `psg` sequence object to GE binary format
-- `pge2.check(psg, sysGE, ...)`: Check compatibility of `psg` sequence object with GE scanner specifications
-- `pge2.plot(psg, sysGE, ...)`: Visualize segment/block layout and detailed timing
-- `pge2.validate(psg, seq, ...)`: Validate `psg` structure and GE simulator (WTools) output against original Pulseq sequence object (`seq`)
+- `pge2.import(pulseg_ir)`: Convert PulSeg 2.0-alpha IR to legacy `pge_ir` struct
+- `pge2.serialize(pge_ir, 'output.pge')`: Export `pge_ir` sequence object to GE binary format
+- `pge2.check(pge_ir, sysGE, ...)`: Check compatibility of `pge_ir` sequence object with GE scanner specifications
+- `pge2.plot(pge_ir, sysGE, ...)`: Visualize segment/block layout and detailed timing
+- `pge2.validate(pge_ir, seq, ...)`: Validate `pge_ir` structure and GE simulator (WTools) output against original Pulseq sequence object (`seq`)
 
 > **Note:**
 > This package does not execute sequences directly on GE hardware, but prepares files and utilities for the downstream GE backend interpreter.
@@ -41,7 +41,7 @@ Key Features:
 > **Alpha status:**
 > PulSeg 2.0 support in `pge2` is currently an alpha-stage compatibility path intended
 > for collaborator feedback and testing. The PulSeg 2.0-alpha representation and the
-> `psg` adapter may change before a stable PulSeg 2.0 release.
+> `pge_ir` adapter may change before a stable PulSeg 2.0 release.
 
 ---
 
@@ -80,22 +80,22 @@ Overview:
     pulseg_ir = pulseg.import('path/to/sequence.seq');
     ```
 
-3. Convert the PulSeg 2.0-alpha IR to the legacy pge2-compatible `psg` struct:
+3. Convert the PulSeg 2.0-alpha IR to the legacy pge2-compatible `pge_ir` struct:
 
     ```matlab
-    psg = pge2.import(pulseg_ir);
+    pge_ir = pge2.import(pulseg_ir);
     ```
 
     Equivalently, the explicit adapter can be called directly:
 
     ```matlab
-    psg = pge2.pulseg2psg(pulseg_ir);
+    pge_ir = pge2.pulseg2pge(pulseg_ir);
     ```
 
 4. Export to binary file for execution on GE scanners using the pge2 interpreter:
 
     ```matlab
-    pge2.serialize(psg, 'output.pge');
+    pge2.serialize(pge_ir, 'output.pge');
     ```
 
 5. Optional: compare output of the WTools simulator with the original Pulseq file:
@@ -106,7 +106,7 @@ Overview:
 
     xmlPath = '~/transfer/xml/';   % directory for Pulse View .xml files
 
-    pge2.validate(psg, sysGE, seq, xmlPath, 'row', [], 'plot', true);
+    pge2.validate(pge_ir, sysGE, seq, xmlPath, 'row', [], 'plot', true);
     ```
 
 ---
@@ -119,19 +119,19 @@ PulSeg 2.0-alpha represents sequences using:
 - `virtual_segments`
 - `execution_stream`
 
-Existing `pge2` tools expect the older `psg` representation, including fields such as:
+Existing `pge2` tools expect the older `pge_ir` representation, including fields such as:
 
-- `psg.loop`
-- `psg.segments`
-- `psg.parentBlocks`
-- `psg.nMax`
-- `psg.nSegments`
-- `psg.nParentBlocks`
+- `pge_ir.loop`
+- `pge_ir.segments`
+- `pge_ir.parentBlocks`
+- `pge_ir.nMax`
+- `pge_ir.nSegments`
+- `pge_ir.nParentBlocks`
 
 The adapter:
 
 ```matlab
-psg = pge2.pulseg2psg(pulseg_ir);
+pge_ir = pge2.pulseg2pge(pulseg_ir);
 ```
 
 maps PulSeg 2.0-alpha objects into this legacy-compatible structure.
@@ -146,7 +146,7 @@ PulSeg 2.0-alpha uses reserved base block IDs:
 | `1` | implicit variable delay |
 | `>= 2` | explicit normalized base block |
 
-Legacy `psg` uses:
+Legacy `pge_ir` uses:
 
 | Legacy block ID | Meaning |
 |---:|---|
@@ -163,12 +163,12 @@ PulSeg 2.0-alpha stores RF and ADC frequency offsets separately:
 - `rf_frequency_offset`
 - `adc_frequency_offset`
 
-The legacy `psg.loop` table does not contain a dedicated ADC frequency offset column.
+The legacy `pge_ir.loop` table does not contain a dedicated ADC frequency offset column.
 To preserve this information, the adapter stores ADC frequency offsets in a row-aligned
 sidecar field:
 
 ```matlab
-psg.loop_adc_frequency_offset
+pge_ir.loop_adc_frequency_offset
 ```
 
 Existing legacy pge2 tools may ignore this field if ADC frequency offsets are not needed.
@@ -180,12 +180,12 @@ Existing legacy pge2 tools may ignore this field if ADC frequency offsets are no
 The current development strategy is intentionally conservative:
 
 1. Use PulSeg 2.0-alpha as the source representation.
-2. Convert to legacy `psg` for existing `pge2` tools.
+2. Convert to legacy `pge_ir` for existing `pge2` tools.
 3. Gradually migrate `pge2` internals to operate directly on `pulseg_ir` where useful.
 
 This avoids a large rewrite while PulSeg 2.0 is still evolving.
 
-Long-term, direct `pulseg_ir` support is preferred over depending on `psg.loop`.
+Long-term, direct `pulseg_ir` support is preferred over depending on `pge_ir.loop`.
 
 ---
 

@@ -1,18 +1,18 @@
-function psg = import(input, varargin)
-% IMPORT Import supported representations into a pge2 psg struct.
+function pge_ir = import(input, varargin)
+% IMPORT Import supported representations into a pge2 pge_ir struct.
 %
 % Syntax:
-%   psg = pge2.import(pulseg_ir)
-%   psg = pge2.import(seqfile)
+%   pge_ir = pge2.import(pulseg_ir)
+%   pge_ir = pge2.import(seqfile)
 
     if isstruct(input) && isfield(input, 'pulseg_version')
-        psg = pge2.pulseg2psg(input, varargin{:});
+        pge_ir = pge2.pulseg2pge(input, varargin{:});
         return;
     end
 
     if ischar(input) || isstring(input)
         pulseg_ir = pulseg.import(char(input));
-        psg = pge2.pulseg2psg(pulseg_ir, varargin{:});
+        pge_ir = pge2.pulseg2pge(pulseg_ir, varargin{:});
         return;
     end
 
