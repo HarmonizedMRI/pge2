@@ -10,13 +10,19 @@
 ## Overview
 
 This package implements the `+pge2` MATLAB namespace for exporting PulSeg
-sequence representations to a binary file that can be consumed by the `pge2` GE
+sequence representations to binary files that can be consumed by the GE `pge2`
 interpreter.
 
-The current `pge2` tools operate on a legacy internal struct called `pge_ir`. New PulSeg
-development is moving toward the PulSeg 2.0-alpha intermediate representation
-(`pulseg_ir`). During this transition, `pge2` supports PulSeg 2.0-alpha through a
-compatibility adapter:
+The GE `pge2` interpreter is available here:
+https://github.com/GEHC-External/pulseq-ge-interpreter
+
+For example workflows and usage context, see:
+https://github.com/HarmonizedMRI/SequenceExamples-GE/tree/main/pge2
+
+The current `pge2` MATLAB tools operate on a pge2-specific working representation,
+referred to here as `pge_ir`. New PulSeg development is moving toward the formal
+PulSeg 2.0-alpha intermediate representation (`pulseg_ir`). During this transition,
+`pge2` supports PulSeg 2.0-alpha through a compatibility adapter:
 
 ```matlab
 pulseg_ir = pulseg.import('path/to/sequence.seq');
