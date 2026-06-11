@@ -9,7 +9,7 @@
 
 ## Overview
 
-This package implements the `+pge2` MATLAB namespace for exporting PulSeg-derived
+This package implements the `+pge2` MATLAB namespace for exporting PulSeg
 sequence representations to a binary file that can be consumed by the `pge2` GE
 interpreter.
 
@@ -26,7 +26,7 @@ pge_ir    = pge2.import(pulseg_ir);
 where:
 
 - `pulseg_ir` is the PulSeg 2.0-alpha intermediate representation.
-- `pge_ir` is the legacy pge2-compatible struct used by existing GE export/check/plot tools.
+- `pge_ir` is the legacy pge2-compatible struct used by existing export/check/plot tools.
 
 Key Features:
 - `pge2.import(pulseg_ir)`: Convert PulSeg 2.0-alpha IR to legacy `pge_ir` struct
