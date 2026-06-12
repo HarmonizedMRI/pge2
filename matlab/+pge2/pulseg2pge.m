@@ -1,9 +1,9 @@
-function pge_ir = pulseg2pge(pulseg_ir, varargin)
-% PULSEG2PSG Convert PulSeg 2.0-alpha IR to legacy pge2 pge_ir struct.
+function pge = pulseg2pge(pulseg_ir, varargin)
+% PULSEG2PSG Convert PulSeg 2.0-alpha IR to legacy pge2 pge struct.
 %
 % Syntax:
-%   pge_ir = pge2.pulseg2pge(pulseg_ir)
-%   pge_ir = pge2.pulseg2pge(pulseg_ir, 'grad_raster_time', dt)
+%   pge = pge2.pulseg2pge(pulseg_ir)
+%   pge = pge2.pulseg2pge(pulseg_ir, 'grad_raster_time', dt)
 %
 % Description:
 %   PULSEG2PSG converts a PulSeg 2.0-alpha IR struct into the legacy `psq`/`psg`
@@ -24,19 +24,19 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
 %
 %   keep_pulseg_ir
 %       Logical flag. If true, store the original PulSeg IR inside
-%       pge_ir.pulseg_ir. Default: false.
+%       pge.pulseg_ir. Default: false.
 %
 % Output:
-%   pge_ir 
+%   pge 
 %       Legacy pge2-compatible struct with fields such as:
 %
-%           pge_ir.loop
-%           pge_ir.segments
-%           pge_ir.parentBlocks
-%           pge_ir.nMax
-%           pge_ir.nSegments
-%           pge_ir.nParentBlocks
-%           pge_ir.nReadouts
+%           pge.loop
+%           pge.segments
+%           pge.parentBlocks
+%           pge.nMax
+%           pge.nSegments
+%           pge.nParentBlocks
+%           pge.nReadouts
 %
 % Legacy loop column convention:
 %
@@ -62,7 +62,7 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
 % Notes:
 %   - PulSeg 2.0-alpha uses base block IDs 0, 1, 2, ...
 %     where 0 and 1 are reserved implicit delay blocks.
-%   - Legacy pge_ir uses:
+%   - Legacy pge uses:
 %         0  = constant delay
 %        -1  = variable delay
 %         1+ = explicit parent block indices
@@ -70,7 +70,7 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
 %     loop does not have a column for ADC frequency. To avoid losing this
 %     information completely, this adapter stores a row-aligned sidecar:
 %
-%         pge_ir.loop_adc_frequency_offset
+%         pge.loop_adc_frequency_offset
 %
 %     Existing legacy pge2 code can ignore this field.
 
@@ -117,42 +117,42 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
     assert(size(loop2, 2) >= 24, ...
         'Expected pulseg.stream2loop() to return at least 24 columns.');
 
-    %% Initialize pge_ir
+    %% Initialize pge
 
-    pge_ir = struct();
+    pge = struct();
 
-    pge_ir.pge_ir_version = 'legacy-from-pulseg';
-    pge_ir.source_pulseg_version = char(pulseg_ir.pulseg_version);
+    pge.pge_version = 'legacy-from-pulseg';
+    pge.source_pulseg_version = char(pulseg_ir.pulseg_version);
 
     if isfield(pulseg_ir, 'source_file')
-        pge_ir.source_file = pulseg_ir.source_file;
+        pge.source_file = pulseg_ir.source_file;
     end
 
     if isfield(pulseg_ir, 'creation_date')
-        pge_ir.creation_date = pulseg_ir.creation_date;
+        pge.creation_date = pulseg_ir.creation_date;
     end
 
     if isfield(pulseg_ir, 'duration')
-        pge_ir.duration = pulseg_ir.duration;
+        pge.duration = pulseg_ir.duration;
     end
 
     if arg.keep_pulseg_ir
-        pge_ir.pulseg_ir = pulseg_ir;
+        pge.pulseg_ir = pulseg_ir;
     end
 
     %% Count fields
 
-    pge_ir.nMax = size(loop2, 1);
-    pge_ir.n_max = pge_ir.nMax;
+    pge.nMax = size(loop2, 1);
+    pge.n_max = pge.nMax;
 
-    pge_ir.nSegments = numel(pulseg_ir.virtual_segments);
-    pge_ir.n_segments = pge_ir.nSegments;
+    pge.nSegments = numel(pulseg_ir.virtual_segments);
+    pge.n_segments = pge.nSegments;
 
-    pge_ir.nParentBlocks = numel(pulseg_ir.base_blocks);
-    pge_ir.n_parent_blocks = pge_ir.nParentBlocks;
+    pge.nParentBlocks = numel(pulseg_ir.base_blocks);
+    pge.n_parent_blocks = pge.nParentBlocks;
 
-    pge_ir.nReadouts = count_adc_events(pulseg_ir);
-    pge_ir.n_adc = pge_ir.nReadouts;
+    pge.nReadouts = count_adc_events(pulseg_ir);
+    pge.n_adc = pge.nReadouts;
 
     %% Build base-block-ID -> legacy parent-block-ID mapping
 
@@ -161,7 +161,7 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
     % In PulSeg 2.0-alpha:
     %   explicit base block IDs are >= 2.
     %
-    % In legacy pge_ir:
+    % In legacy pge:
     %   explicit parent block IDs are 1:nParentBlocks.
     %
     % We map according to the order in pulseg_ir.base_blocks.
@@ -169,9 +169,9 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
 
     %% Build parentBlocks
 
-    pge_ir.parentBlocks = struct('row', {}, 'block', {}, 'ID', {}, 'base_block_id', {});
+    pge.parentBlocks = struct('row', {}, 'block', {}, 'ID', {}, 'base_block_id', {});
 
-    for p = 1:pge_ir.nParentBlocks
+    for p = 1:pge.nParentBlocks
         b = pulseg_ir.base_blocks(p).block;
 
         % Legacy code may expect the block itself to carry ID = parent index.
@@ -179,15 +179,15 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
             b.ID = p;
         end
 
-        pge_ir.parentBlocks(p).row = NaN;  % filled below with first occurrence
-        pge_ir.parentBlocks(p).block = b;
-        pge_ir.parentBlocks(p).ID = p;
-        pge_ir.parentBlocks(p).base_block_id = pulseg_ir.base_blocks(p).id;
+        pge.parentBlocks(p).row = NaN;  % filled below with first occurrence
+        pge.parentBlocks(p).block = b;
+        pge.parentBlocks(p).ID = p;
+        pge.parentBlocks(p).base_block_id = pulseg_ir.base_blocks(p).id;
     end
 
     %% Build legacy segments
 
-    pge_ir.segments = struct( ...
+    pge.segments = struct( ...
         'nBlocksInSegment', {}, ...
         'TRID', {}, ...
         'ID', {}, ...
@@ -195,37 +195,37 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
         'blockIDs', {}, ...
         'virtual_segment_id', {} );
 
-    for s = 1:pge_ir.nSegments
+    for s = 1:pge.nSegments
         vs = pulseg_ir.virtual_segments(s);
 
-        pge_ir.segments(s).nBlocksInSegment = numel(vs.base_block_ids);
+        pge.segments(s).nBlocksInSegment = numel(vs.base_block_ids);
 
         if isfield(vs, 'TRID')
-            pge_ir.segments(s).TRID = vs.TRID;
+            pge.segments(s).TRID = vs.TRID;
         else
-            pge_ir.segments(s).TRID = vs.id;
+            pge.segments(s).TRID = vs.id;
         end
 
         % Legacy segment ID is the MATLAB array index.
-        pge_ir.segments(s).ID = s;
+        pge.segments(s).ID = s;
 
-        % Fill below with first occurrence in the pge_ir loop.
-        pge_ir.segments(s).rows = [];
+        % Fill below with first occurrence in the pge loop.
+        pge.segments(s).rows = [];
 
         % Preserve original PulSeg virtual segment ID for traceability.
-        pge_ir.segments(s).virtual_segment_id = vs.id;
+        pge.segments(s).virtual_segment_id = vs.id;
 
         % Convert PulSeg base_block_ids to legacy blockIDs.
-        pge_ir.segments(s).blockIDs = pulseg_base_ids_to_legacy_parent_ids( ...
+        pge.segments(s).blockIDs = pulseg_base_ids_to_legacy_parent_ids( ...
             vs.base_block_ids, base_ids, parent_ids);
     end
 
-    %% Convert loop2 to legacy 23-column pge_ir.loop
+    %% Convert loop2 to legacy 23-column pge.loop
 
-    loop = zeros(pge_ir.nMax, 23);
+    loop = zeros(pge.nMax, 23);
 
     % Sidecar for information not representable in legacy 23-column loop.
-    pge_ir.loop_adc_frequency_offset = zeros(pge_ir.nMax, 1);
+    pge.loop_adc_frequency_offset = zeros(pge.nMax, 1);
 
     vs_ids = [pulseg_ir.virtual_segments.id];
 
@@ -245,12 +245,12 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
         row_start = row;
         row_end = row + nBlocksInSegment - 1;
 
-        assert(row_end <= pge_ir.nMax, ...
-            'Internal error while building pge_ir.loop: row index exceeds nMax.');
+        assert(row_end <= pge.nMax, ...
+            'Internal error while building pge.loop: row index exceeds nMax.');
 
         % Store first occurrence rows for this segment, matching legacy style.
-        if isempty(pge_ir.segments(s).rows)
-            pge_ir.segments(s).rows = row_start:row_end;
+        if isempty(pge.segments(s).rows)
+            pge.segments(s).rows = row_start:row_end;
         end
 
         % Default legacy segment-level rotation is identity, written to the
@@ -262,7 +262,7 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
             base_block_id = vs.base_block_ids(j);
             parent_id = pulseg_base_id_to_legacy_parent_id(base_block_id, base_ids, parent_ids);
 
-            % Map current PulSeg loop row to old pge_ir.loop columns.
+            % Map current PulSeg loop row to old pge.loop columns.
             %
             % Segment/parent IDs.
             loop(row, 1) = s;
@@ -275,7 +275,7 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
             loop(row, 12) = loop2(row, 12);
 
             % Legacy loop has no ADC frequency column. Store sidecar.
-            pge_ir.loop_adc_frequency_offset(row) = loop2(row, 13);
+            pge.loop_adc_frequency_offset(row) = loop2(row, 13);
 
             % Duration and trigger shift by one because loop2 has ADC freq.
             loop(row, 13) = loop2(row, 14);
@@ -286,8 +286,8 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
             end
 
             % Parent block first occurrence row.
-            if parent_id > 0 && isnan(pge_ir.parentBlocks(parent_id).row)
-                pge_ir.parentBlocks(parent_id).row = row;
+            if parent_id > 0 && isnan(pge.parentBlocks(parent_id).row)
+                pge.parentBlocks(parent_id).row = row;
             end
 
             % Legacy rotation convention:
@@ -304,15 +304,15 @@ function pge_ir = pulseg2pge(pulseg_ir, varargin)
         loop(row_end, 15:23) = R_last_flat;
     end
 
-    assert(row == pge_ir.nMax + 1, ...
+    assert(row == pge.nMax + 1, ...
         'Internal error: expected to populate %d rows, populated %d.', ...
-        pge_ir.nMax, row - 1);
+        pge.nMax, row - 1);
 
-    pge_ir.loop = loop;
+    pge.loop = loop;
 
     %% Compute legacy Emax fields
 
-    pge_ir = compute_segment_emax(pge_ir);
+    pge = compute_segment_emax(pge);
 end
 
 
@@ -342,14 +342,14 @@ end
 
 
 function parent_id = pulseg_base_id_to_legacy_parent_id(base_block_id, base_ids, parent_ids)
-% PULSEG_BASE_ID_TO_LEGACY_PARENT_ID Convert PulSeg base block ID to legacy pge_ir ID.
+% PULSEG_BASE_ID_TO_LEGACY_PARENT_ID Convert PulSeg base block ID to legacy pge ID.
 %
 % PulSeg 2.0-alpha:
 %   0 = implicit constant delay
 %   1 = implicit variable delay
 %   >=2 = explicit base block ID
 %
-% Legacy pge_ir:
+% Legacy pge:
 %   0 = constant delay
 %  -1 = variable delay
 %   >=1 = parent block index
@@ -411,7 +411,7 @@ function r = flatten_rotation_row_major(R)
 end
 
 
-function pge_ir = compute_segment_emax(pge_ir)
+function pge = compute_segment_emax(pge)
 % COMPUTE_SEGMENT_EMAX Compute legacy segment Emax fields.
 %
 % Uses loop energy columns:
@@ -420,39 +420,39 @@ function pge_ir = compute_segment_emax(pge_ir)
 %   9  = Gy energy
 %   11 = Gz energy
 
-    for s = 1:pge_ir.nSegments
-        pge_ir.segments(s).Emax.val = 0;
-        pge_ir.segments(s).Emax.n = 1;
+    for s = 1:pge.nSegments
+        pge.segments(s).Emax.val = 0;
+        pge.segments(s).Emax.n = 1;
     end
 
     row = 1;
 
-    while row <= pge_ir.nMax
-        s = pge_ir.loop(row, 1);
+    while row <= pge.nMax
+        s = pge.loop(row, 1);
 
-        if s < 1 || s > pge_ir.nSegments
+        if s < 1 || s > pge.nSegments
             row = row + 1;
             continue;
         end
 
-        nBlocksInSegment = pge_ir.segments(s).nBlocksInSegment;
+        nBlocksInSegment = pge.segments(s).nBlocksInSegment;
 
-        if row + nBlocksInSegment - 1 > pge_ir.nMax
+        if row + nBlocksInSegment - 1 > pge.nMax
             break;
         end
 
         row_start = row;
         rows = row_start:(row_start + nBlocksInSegment - 1);
 
-        E_gx = sum(pge_ir.loop(rows, 7));
-        E_gy = sum(pge_ir.loop(rows, 9));
-        E_gz = sum(pge_ir.loop(rows, 11));
+        E_gx = sum(pge.loop(rows, 7));
+        E_gy = sum(pge.loop(rows, 9));
+        E_gz = sum(pge.loop(rows, 11));
 
         E_all = E_gx + E_gy + E_gz;
 
-        if E_all > pge_ir.segments(s).Emax.val
-            pge_ir.segments(s).Emax.val = E_all;
-            pge_ir.segments(s).Emax.n = row_start;
+        if E_all > pge.segments(s).Emax.val
+            pge.segments(s).Emax.val = E_all;
+            pge.segments(s).Emax.n = row_start;
         end
 
         row = row + nBlocksInSegment;
