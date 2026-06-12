@@ -33,6 +33,7 @@ where:
 
 - `pulseg_ir` is the PulSeg 2.0-alpha intermediate representation.
 - `pge` is the legacy pge2-compatible struct used by existing export/check/plot tools.
+  It is serialized directly for the GE pge2 interpreter and is not part of the formal PulSeg specification.
 
 Key Features:
 - `pge2.import(pulseg_ir)`: Convert PulSeg 2.0-alpha IR to legacy `pge` struct
@@ -42,7 +43,7 @@ Key Features:
 - `pge2.validate(pge, seq, ...)`: Validate `pge` structure and GE simulator (WTools) output against original Pulseq sequence object (`seq`)
 
 > **Note:**
-> This package does not execute sequences directly on GE hardware, but prepares files and utilities for the downstream GE backend interpreter.
+> This package does not execute sequences directly on GE hardware, but prepares files for the downstream GE backend interpreter.
 
 > **Alpha status:**
 > PulSeg 2.0 support in `pge2` is currently an alpha-stage compatibility path intended
