@@ -13,7 +13,7 @@ standard GE scanner prescription interface for **FOV translation and rotation**.
 
 The workflow automatically reads the prescribed FOV offset from the scanner
 (using `printSHM`) and applies it to the PulSeg sequence by calling
-`pge2.translateFOVrf()` via the MATLAB Runtime installed on the scanner.
+`pulseg.translateFOVrf()` via the MATLAB Runtime installed on the scanner.
 
 The result is a `.pge` sequence that reflects the prescribed FOV translation.
 
@@ -92,7 +92,7 @@ C --> D
 For each scan, the function `translateFOVrf.m` is executed.
 This does several things:
 1. loads the PulSeg object from a `.mat` file, 
-2. applies the FOV offset using `pge2.translateFOVrf()`, 
+2. applies the FOV offset using `pulseg.translateFOVrf()`, 
 3. writes the resulting sequence to a `_fov.pge` file, and
 4.  creates the corresponding `.entry` file using `pge2.writeentryfile`.
 
@@ -103,10 +103,11 @@ Each `.mat` file must contain a `psq` object,
 a `params` struct and `pislquant`.
 Example:
 ```matlab
->> psq = pulseg.fromSeq('gre2d.seq');
->> params = pge2.check(psq, sys_ge, ...);
+>> pulseg_ir = pulseg.import('gre2d.seq');
+>> pge = pge2.import(pulseg_ir, 'grad_raster_time', 4e-6);
+>> params = pge2.check(pge, sys_ge, ...);
 >> pislquant = 10;   % number of ADC events for receive gain calibration in Auto Prescan
->> save gre2d.mat psq params pislquant
+>> save gre2d.mat pulseg_ir params pislquant
 ```
 
 For more details on working with these functions, see the 'official' PulSeg/pge2 demo sequence at
@@ -123,7 +124,7 @@ printSHM > Rx.txt
 The `translateFOVrf` function uses these values to compute the
 corresponding FOV translation for the PulSeg sequence via
 ```matlab
-pge2.translateFOVrf()
+pulseg.translateFOVrf()
 ```
 This allows Pulseq sequences to follow the standard GE prescription
 workflow, including:
