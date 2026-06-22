@@ -99,7 +99,7 @@ This does several things:
  
 ## Preparing the `.mat` files
 
-Each `.mat` file must contain a `psq` object, 
+Each `.mat` file must contain a `pulseg_ir` object, 
 a `params` struct and `pislquant`.
 Example:
 ```matlab
@@ -126,7 +126,7 @@ corresponding FOV translation for the PulSeg sequence via
 ```matlab
 pulseg.translateFOVrf()
 ```
-This allows Pulseq sequences to follow the standard GE prescription
+This allows PulSeg sequences to follow the standard GE prescription
 workflow, including:
 
 * slice offsets
