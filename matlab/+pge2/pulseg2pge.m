@@ -293,15 +293,11 @@ function pge = pulseg2pge(pulseg_ir, varargin)
             % Legacy rotation convention:
             %   use the last non-identity gradient-event rotation in the segment instance,
             %   then write it to the final block row of the segment instance.
-            if base_block_has_gradient(pulseg_ir, base_block_id)
+            R = loop2(row,16:24);
 
-                R = loop2(row,16:24);
-
-                % Update only if this is a non-identity rotation.
-                if ~is_identity_rotation_flat(R)
-                    R_last_flat = R;
-                end
-
+            % Update only if this is a non-identity rotation.
+            if ~is_identity_rotation_flat(R)
+                R_last_flat = R;
             end
 
             row = row + 1;
