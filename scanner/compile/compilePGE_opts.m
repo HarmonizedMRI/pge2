@@ -35,3 +35,6 @@ opts.pge_check.PNSwt = [1 1 1];
 
 opts.pge_serialize.pislquant = 10;
 opts.pge_serialize.checkHash = true;
+
+% ----- pge2.writeentryfile() ---------------------------------------------
+opts.pge_writeentryfile.path = '/srv/nfs/psd/usr/psd/pulseq/v7/sequences/';

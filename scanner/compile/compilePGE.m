@@ -71,7 +71,8 @@ pge2.serialize( ...
     args{:});
 
 % Write the corresponding entry file
-pge2.writeentryfile(opuser1, outputFile, 'path', pwd);
+args = getNamedArgs(opts, 'pge_writeentryfile');
+pge2.writeentryfile(opuser1, outputFile, args{:});
 
 return
 

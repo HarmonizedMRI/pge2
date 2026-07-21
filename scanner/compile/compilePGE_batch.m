@@ -66,7 +66,7 @@ for i = 1:numel(lines)
     end
 
     [seqPath, seqName] = fileparts(seqFile);
-    outputFile = fullfile(seqPath, seqName + ".pge");
+    outputFile = seqName + ".pge";   % write to current working directory
 
     fprintf('\nCompiling %s -> %s\n', seqFile, outputFile);
 
