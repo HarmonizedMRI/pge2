@@ -1,30 +1,37 @@
 function opts = prepare_scan_opts()
 
-% soft delay 'input' value
+% ----- PulSeg import -----------------------------------------------------
+
+% Soft delay 'input' value (ms)
 opts.pulseg_import.soft_delay_input_ms = 700;
 
-% output of command-line function `printSHM`
-opts.translateFOV.Rxfile = 'Rx.txt';    
+% ----- Optional FOV translation ------------------------------------------
 
-% gradient raster time (used to calculate gradient heating)
-opts.pge2_import.grad_raster_time = 4e-6;  % sec
+% Output of command-line function `printSHM`
+%opts.translateFOV.Rxfile = 'Rx.txt';
 
-% Peripheral nerve stimulation weights along logical x/y/z directions
-opts.check.PNSwt = [1 1 1];  
+% ----- GE scanner definition ---------------------------------------------
 
-% number of ADC events at start of scan to use for receive gain calibration (R1/R2)
-opts.serialize.pislquant = 10;  
+psd_rf_wait  = 100e-6;
+psd_grd_wait = 100e-6;
+b1_max       = 0.25;
+g_max        = 5;
+slew_max     = 20;
+coil          = 'xrm';
 
-% assert that parameters returned by pge2.check() are used when serializing
-opts.serialize.checkHash = true;
+opts.sys_ge = pge2.opts( ...
+    psd_rf_wait, psd_grd_wait, ...
+    b1_max, g_max, slew_max, coil);
 
-% GE scanner parameters
-psd_rf_wait  = 100e-6;   % RF–gradient delay (s), scanner-specific
-psd_grd_wait = 100e-6;   % ADC–gradient delay (s), scanner-specific
-b1_max   = 0.25;         % Gauss
-g_max    = 5;            % Gauss/cm
-slew_max = 20;           % Gauss/cm/ms
-coil     = 'xrm';        % See pge2.opts(). 'xrm' (MR750), 'hrmw' (Premier), 'magnus', ...
+% ----- pge2.import() -----------------------------------------------------
 
-opts.sys_ge = pge2.opts(psd_rf_wait, psd_grd_wait, b1_max, g_max, slew_max, coil);
+opts.pge_import.grad_raster_time = 4e-6;
 
+% ----- pge2.check() ------------------------------------------------------
+
+opts.pge_check.PNSwt = [1 1 1];
+
+% ----- pge2.serialize() --------------------------------------------------
+
+opts.pge_serialize.pislquant = 10;
+opts.pge_serialize.checkHash = true;
