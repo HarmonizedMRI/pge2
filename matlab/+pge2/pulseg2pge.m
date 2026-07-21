@@ -291,10 +291,17 @@ function pge = pulseg2pge(pulseg_ir, varargin)
             end
 
             % Legacy rotation convention:
-            %   use the last gradient-event rotation in the segment instance,
+            %   use the last non-identity gradient-event rotation in the segment instance,
             %   then write it to the final block row of the segment instance.
             if base_block_has_gradient(pulseg_ir, base_block_id)
-                R_last_flat = loop2(row, 16:24);
+
+                R = loop2(row,16:24);
+
+                % Update only if this is a non-identity rotation.
+                if ~is_identity_rotation_flat(R)
+                    R_last_flat = R;
+                end
+
             end
 
             row = row + 1;
@@ -315,6 +322,14 @@ function pge = pulseg2pge(pulseg_ir, varargin)
     pge = compute_segment_emax(pge);
 end
 
+function tf = is_identity_rotation_flat(Rflat)
+%IS_IDENTITY_ROTATION_FLAT True if flattened rotation matrix is identity.
+
+    Iflat = [1 0 0 0 1 0 0 0 1];
+
+    tf = all(abs(Rflat - Iflat) < 1e-12);
+
+end
 
 function n_adc = count_adc_events(pulseg_ir)
 % COUNT_ADC_EVENTS Count ADC events across all execution stream instances.
