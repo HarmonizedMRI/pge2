@@ -290,9 +290,11 @@ function pge = pulseg2pge(pulseg_ir, varargin)
                 pge.parentBlocks(parent_id).row = row;
             end
 
-            % Legacy rotation convention:
-            %   use the last non-identity gradient-event rotation in the segment instance,
-            %   then write it to the final block row of the segment instance.
+            % GE pge2 interpreter compatibility:
+            % The pge2 EPIC interpreter reads the segment rotation from the final block of
+            % the segment. PulSeg, however, associates rotations with individual
+            % gradient events. Therefore we propagate the last non-identity rotation
+            % encountered within the segment to the final block row.
             R = loop2(row,16:24);
 
             % Update only if this is a non-identity rotation.
