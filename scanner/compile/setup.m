@@ -2,7 +2,7 @@
 addpath ../../matlab   % +pge2 namespace
 
 % get Pulseq toolbox
-%system('git clone --branch dev git@github.com:pulseq/pulseq.git');
+system('git clone git@github.com:pulseq/pulseq.git');
 addpath pulseq/matlab
 
 % get toolbox to convert .seq file to a PulSeg intermediate representation
