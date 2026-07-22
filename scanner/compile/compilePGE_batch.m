@@ -5,7 +5,7 @@ function compilePGE_batch(scan_list, opts)
 %
 %   scan_list : Path to a text file with one entry per line:
 %
-%                   <opuser1> <seq_file>
+%               <opuser1> <seq_file>
 %
 %               For example:
 %
