@@ -12,12 +12,12 @@ opts.pulseg_import.soft_delay_input_ms = 700;
 
 % ----- GE scanner definition ---------------------------------------------
 
-psd_rf_wait  = 100e-6;
-psd_grd_wait = 100e-6;
-b1_max       = 0.25;
-g_max        = 5;
-slew_max     = 20;
-coil          = 'xrm';
+psd_rf_wait  = 100e-6;  % sec
+psd_grd_wait = 100e-6;  % sec
+b1_max       = 0.25;    % Gauss
+g_max        = 5;       % Gauss/cm
+slew_max     = 20;      % Gauss/cm/msec
+coil         = 'xrm';
 
 opts.sys_ge = pge2.opts( ...
     psd_rf_wait, psd_grd_wait, ...
