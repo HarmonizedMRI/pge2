@@ -40,6 +40,19 @@ arg.segment_dead_time = 12e-6;        % dead time at start of segment
 arg.segment_ringdown_time = 105e-6;   % ssi time, plus 4us SSP pulse, plus 1us (probably EOS bit)
 arg.gamma = 4.2576e3;                 % Hz/G
 
+% PNS model parameters. These coil-specific values are defaults and may be
+% overridden using the keyword arguments 'chronaxie', 'rheobase', and 'alpha'.
+switch lower(coil)
+    case 'xrmw',   arg.chronaxie=360d-6;   arg.rheobase=20.0; arg.alpha=0.324;
+    case 'xrm',    arg.chronaxie=334d-6;   arg.rheobase=23.4; arg.alpha=0.333;
+    case 'whole',  arg.chronaxie=370d-6;   arg.rheobase=23.7; arg.alpha=0.344;
+    case 'zoom',   arg.chronaxie=354d-6;   arg.rheobase=29.1; arg.alpha=0.309;
+    case 'hrmbuhp',arg.chronaxie=359d-6;   arg.rheobase=26.5; arg.alpha=0.370;
+    case 'hrmw',   arg.chronaxie=642.4d-6; arg.rheobase=17.9; arg.alpha=0.310;
+    case 'magnus', arg.chronaxie=611d-6;   arg.rheobase=55.2; arg.alpha=0.324;
+    otherwise, error('gradient coil (%s) unknown', coil);
+end
+
 arg = vararg_pair(arg, varargin);   % in ../
 
 sysGE.GRAD_UPDATE_TIME = arg.GRAD_UPDATE_TIME;
@@ -57,22 +70,9 @@ sysGE.b1_max = b1_max;
 sysGE.g_max = g_max;
 sysGE.slew_max = slew_max;
 sysGE.gamma = arg.gamma;
-
-% PNS model parameters
-switch lower(coil)
-    case 'xrmw',  chronaxie=360d-6; rheobase=20.0; alpha=0.324;
-    case 'xrm',   chronaxie=334d-6; rheobase=23.4; alpha=0.333;
-    case 'whole', chronaxie=370d-6; rheobase=23.7; alpha=0.344;
-    case 'zoom',  chronaxie=354d-6; rheobase=29.1; alpha=0.309;
-    case 'hrmbuhp',  chronaxie=359d-6; rheobase=26.5; alpha=0.370;
-    case 'hrmw',  chronaxie=642.4d-6; rheobase=17.9; alpha=0.310;
-    case 'magnus', chronaxie=611d-6; rheobase=55.2; alpha=0.324;
-    otherwise, error('gradient coil (%s) unkown', coil);
-end
-
-sysGE.chronaxie = chronaxie;
-sysGE.rheobase = rheobase;
-sysGE.alpha = alpha;
+sysGE.chronaxie = arg.chronaxie;
+sysGE.rheobase = arg.rheobase;
+sysGE.alpha = arg.alpha;
 
 assert(abs(sysGE.b1_max) < 1, ...
     'b1_max must be specified in unit of G (typically this limit is 0.25 or a bit smaller)');
