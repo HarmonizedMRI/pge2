@@ -27,10 +27,10 @@ end
 scan_list = string(scan_list);
 
 if ischar(opts) || (isstring(opts) && isscalar(opts))
-    opts = loadOptionsFunction(opts);
+    opts = loadOptionsJSON(opts);
 elseif ~isstruct(opts)
     error('compilePGE_batch:InvalidOptions', ...
-        'opts must be a structure or the path to an options function.');
+        'opts must be a structure or the path to a JSON options file.');
 end
 
 if ~isfile(scan_list)
@@ -81,29 +81,4 @@ for i = 1:numel(lines)
 
     compilePGE(seqFile, opuser1, outputFile, opts);
 end
-
-
-
-function opts = loadOptionsFunction(optsFile)
-
-optsFile = string(optsFile);
-
-if ~isfile(optsFile)
-    error('compilePGE_batch:OptionsFileNotFound', ...
-        'Options file not found: %s', optsFile);
-end
-
-[optsPath, optsFunction] = fileparts(optsFile);
-
-oldPath = path;
-cleanup = onCleanup(@() path(oldPath));
-addpath(optsPath);
-
-opts = feval(optsFunction);
-
-if ~isstruct(opts)
-    error('compilePGE_batch:InvalidOptionsFunction', ...
-        '%s must return an options structure.', optsFunction);
-end
-
 
