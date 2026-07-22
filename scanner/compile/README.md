@@ -19,10 +19,14 @@ flowchart TD
     C -- Yes --> D["pulseg.translateFOVrf()"]
     C -- No --> E["pge2.import()"]
     D --> E
+
     E --> F["pge2.check()"]
+
     F --> G["pge2.serialize()"]
-    G --> H["pge2.writeentryfile()"]
-    H --> I[".pge + .entry"]
+    F --> H["pge2.writeentryfile()"]
+
+    G --> I[".pge"]
+    H --> J[".entry"]
 ```
 
 If an `Rx.txt` file is provided, the prescribed FOV translation and rotation are
