@@ -172,3 +172,5 @@ required.
 
 The JSON configuration is translated into the corresponding MATLAB API calls,
 including construction of the scanner hardware model via `pge2.opts()`.
+
+> **For developers:** Instructions for rebuilding the standalone executable are available in `DEVELOPMENT.md`.
