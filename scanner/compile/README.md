@@ -1,10 +1,7 @@
 # Scanner-side Pulseq compilation for the pge2 GE interpreter
 
-This directory contains the tools required to compile Pulseq (`.seq`) files into
-GE-compatible `.pge` and `.entry` files **on the scanner** using the MATLAB Runtime.
-
-The workflow is part of the PulSeg and pge2 toolchain and performs the complete
-Pulseq-to-GE compilation pipeline directly on the scanner.
+This package compiles Pulseq (.seq) files into GE-compatible .pge and .entry files on the scanner using the MATLAB Runtime. 
+It performs the following Pulseq-to-GE compilation pipeline and is intended for use with the pge2 GE interpreter.
 
 ---
 
@@ -33,9 +30,35 @@ If an `Rx.txt` file is provided, the prescribed slice offset is applied automati
 
 ---
 
-# Scanner workflow
+## Directory contents
 
-## 1. Create a scan list
+The scanner compilation directory should contain the following files:
+
+```text
+compile/
+├── compilePGE.sh
+├── compilePGE_batch
+├── run_compilePGE_batch.sh
+├── compilePGE.json
+├── pulseq_scans.list
+├── Rx.txt          (optional)
+└── *.seq
+```
+
+* `compilePGE.sh` — main compilation script
+* `compilePGE_batch` and `run_compilePGE_batch.sh` — standalone MATLAB executable and launcher
+* `compilePGE.json` — compilation options
+* `pulseq_scans.list` — sequences to compile
+* `Rx.txt (optional)` — exported scanner prescription
+
+> [!NOTE]
+> run_compilePGE_batch.sh and compilePGE_batch are generated together and should always be copied as a pair.
+
+---
+
+## Compilation workflow
+
+### 1. Create a scan list
 
 Create a text file (for example `pulseq_scans.list`) containing the Pulseq
 sequences to compile:
@@ -50,19 +73,22 @@ sequences to compile:
 The `opuser1` value specifies the Pulseq interpreter slot (`pge<opuser1>.entry`)
 used by the pge2 GE interpreter.
 
-## 2. Prescribe a reference scan
+### 2. Prescribe a reference scan
 
 Prescribe any scan on the GE scanner (either a vendor sequence or a Pulseq
 sequence). This establishes the desired slice position, orientation, and table
 location.
 
-## 3. Save the prescription
+### 3. Save the prescription
 
 ```bash
 printSHM > Rx.txt
 ```
 
-## 4. Compile all sequences
+`printSHM` exports the current scanner prescription, including the slice position, orientation, table position, and field of view. 
+If `translateFOV.Rxfile` is specified in `compilePGE.json`, this information is automatically applied during compilation.
+
+### 4. Compile all sequences
 
 ```bash
 ./compilePGE.sh pulseq_scans.list compilePGE.json
@@ -70,22 +96,22 @@ printSHM > Rx.txt
 
 This generates one `.pge` file and one `.entry` file for every sequence listed.
 
-## 5. Install the generated entry files
+### 5. Install the generated entry files
 
 Create symbolic links (or otherwise install) the generated `.entry` files in the
 GE Pulseq directory.
 
-## 6. Run the Pulseq scans
+### 6. Run the Pulseq scans
 
 Run the Pulseq (`pge2`) scans as usual.
 
 ---
 
-# Configuration
+## Configuration
 
 Compilation is controlled by `compilePGE.json`.
 
-## Sections
+### Sections
 
 | Section | Purpose |
 |---------|---------|
@@ -97,7 +123,7 @@ Compilation is controlled by `compilePGE.json`.
 | `pge_serialize` | Serialization options |
 | `pge_writeentryfile` | Output options |
 
-## Important fields
+### Important fields
 
 | Field | Description |
 |------|-------------|
@@ -113,58 +139,9 @@ Compilation is controlled by `compilePGE.json`.
 
 ---
 
-# GE prescription (`printSHM`)
+## Developer notes
 
-The GE utility
-
-```bash
-printSHM > Rx.txt
-```
-
-exports the current scanner prescription, including
-
-- slice position
-- slice orientation
-- table position
-- field-of-view
-
-When `translateFOV.Rxfile` is specified in the configuration file, these values
-are automatically applied to the Pulseq sequence using
-`pulseg.translateFOVrf()` before the GE sequence is generated.
-
----
-
-# Building the executable
-
-Compile the scanner executable using **MATLAB R2022a**:
-
-```matlab
-setup
-mcc -m compilePGE_batch.m
-```
-
-The resulting executable is called by `compilePGE.sh`.
-
----
-
-# MATLAB Runtime
-
-Current GE scanners use **MATLAB Runtime R2022a**.
-
-Example installation:
-
-```text
-/opt/mathworks_matlab_runtime_r2022a/root/v912/
-```
-
-> **Important**
->
-> The executable must be compiled using MATLAB **R2022a** to ensure compatibility
-> with the runtime installed on the scanner.
-
----
-
-# Developer notes
+Instructions for building the standalone executable (`compilePGE_batch` and `run_compilePGE_batch.sh`) are available in `DEVELOPMENT.md`.
 
 Unlike previous versions of this workflow, the scanner compiler operates
 directly on Pulseq `.seq` files. No intermediate MATLAB `.mat` files are
@@ -173,4 +150,3 @@ required.
 The JSON configuration is translated into the corresponding MATLAB API calls,
 including construction of the scanner hardware model via `pge2.opts()`.
 
-> **For developers:** Instructions for rebuilding the standalone executable are available in `DEVELOPMENT.md`.

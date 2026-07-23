@@ -1,6 +1,28 @@
 # Developer Information
 
-This document contains notes for developers who need to rebuild the standalone Pulseq compiler.
+This document describes how to rebuild the standalone Pulseq compiler and set up a compatible development environment.
+
+## Building the executable
+
+Build the standalone compiler using **MATLAB R2022a**:
+
+```matlab
+setup
+mcc -m compilePGE_batch.m
+```
+
+This generates the standalone executable (`compilePGE_batch`) and its launcher script (`run_compilePGE_batch.sh`), which are invoked by `compilePGE.sh`.
+
+```text
+compile/
+├── compilePGE_batch
+└── run_compilePGE_batch.sh
+```
+
+Copy both files to the scanner compilation directory. 
+The launcher script and executable are generated as a pair and should always be distributed together.
+
+---
 
 ## MATLAB Runtime
 
@@ -15,9 +37,9 @@ The target GE scanner uses the MATLAB Runtime located at:
 > [!IMPORTANT]
 > The standalone executable **must** be compiled using **MATLAB R2022a**. Executables compiled with newer MATLAB releases are not compatible with the scanner runtime.
 
-### Local Runtime Installation (Optional)
+### Local MATLAB Runtime (optional)
 
-For local testing, the MATLAB Runtime can be downloaded directly from MATLAB:
+The MATLAB Runtime can also be installed locally for testing the standalone executable.
 
 ```matlab
 >> compiler.runtime.download
@@ -27,9 +49,11 @@ Downloading MATLAB Runtime installer. It may take several minutes...
     '/home/jon/.MathWorks/MatlabRuntimeCache/MCRInstaller24.2/MATLAB_Runtime_R2024b_Update_4_glnxa64.zip'
 ```
 
+In this case, set `MATLAB_RUNTIME_DIR` in `compilePGE.sh` accordingly.
+
 ## Ubuntu 22.04 LTS
 
-Ubuntu 22.04 LTS has been found to work well with MATLAB R2022a.
+Ubuntu 22.04 LTS is recommended for building the standalone compiler because it has been found to work reliably with MATLAB R2022a.
 
 ### Virtual machine configuration
 
@@ -87,7 +111,8 @@ A separate license file is not required if your institution provides network lic
 
 ### Required toolboxes
 
-The following toolbox configuration has been verified to build the standalone compiler successfully. This list may not be minimal.
+The following toolbox configuration has been verified to build the standalone compiler successfully. 
+The minimum required toolbox set has not been determined.
 
 ```matlab
 >> ver
