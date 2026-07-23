@@ -29,11 +29,7 @@ flowchart TD
     H --> J[".entry"]
 ```
 
-If an Rx.txt file is provided, the prescribed FOV translation is applied automatically 
-before importing the sequence into the GE interpreter. 
-Otherwise, the original Pulseq sequence is compiled without modification. 
-Note that the prescribed rotation and the scanner z-axis (S/I) translation are always applied, 
-regardless of whether an Rx.txt file is provided.
+If an `Rx.txt` file is provided, the prescribed slice offset is applied automatically to the RF excitation before importing the sequence into the GE interpreter. This accounts for all components of the prescribed translation that cannot be achieved by scanner table motion, including through-slice offsets for oblique prescriptions. Otherwise, the original Pulseq sequence is compiled without modification. The prescribed rotation and the scanner z-axis (S/I) translation are always applied, regardless of whether an `Rx.txt` file is provided.
 
 ---
 
