@@ -26,7 +26,7 @@ if isfield(opts, 'pge_check') && ...
         isfield(opts.pge_check, 'pns_weights')
 
     opts.pge_check.PNSwt = opts.pge_check.pns_weights;
-    %opts.pge_check = rmfield(opts.pge_check, 'pns_weights');
+    opts.pge_check = rmfield(opts.pge_check, 'pns_weights');
 end
 
 
