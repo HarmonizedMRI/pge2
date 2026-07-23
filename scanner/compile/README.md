@@ -1,13 +1,13 @@
 # Scanner-side Pulseq compilation for the pge2 GE interpreter
 
 This package compiles Pulseq (.seq) files into GE-compatible .pge and .entry files on the scanner using the MATLAB Runtime. 
-It performs the following Pulseq-to-GE compilation pipeline and is intended for use with the pge2 GE interpreter.
+It performs the complete Pulseq-to-GE compilation pipeline and is intended for use with the pge2 GE interpreter.
 
 ---
 
 ## Overview
 
-The scanner compiler performs the complete Pulseq-to-GE compilation pipeline:
+The scanner compiler performs the following Pulseq-to-GE compilation pipeline:
 
 ```mermaid
 flowchart TD
