@@ -34,10 +34,10 @@ set -euo pipefail
 #   mcc -m compilePGE_batch.m
 
 # MATLAB Runtime installation on the scanner
-MATLAB_RUNTIME_DIR="/opt/mathworks_matlab_runtime_r2022a/root/v912"
+MATLAB_RUNTIME_DIR=/opt/mathworks_matlab_runtime_r2022a/root/v912
 
 # Example MATLAB installation for local testing
-MATLAB_RUNTIME_DIR="/usr/local/MATLAB/R2024b"
+#MATLAB_RUNTIME_DIR=/usr/local/MATLAB/R2024b
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 RUN_SCRIPT="${SCRIPT_DIR}/run_compilePGE_batch.sh"
