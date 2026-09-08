@@ -125,7 +125,9 @@ for j = 1:length(blockIDs)
             else
                 % arbitrary gradient or extended trapezoid
                 tt = g.tt;
-                wav = g.waveform/max([max(abs(g.waveform)) 1]);  % normalized amplitude
+                % wav = g.waveform/max([max(abs(g.waveform)) 1]);  % normalized amplitude
+                gmax = max(abs(g.waveform));
+                wav = g.waveform/(gmax + (gmax == 0));  % normalized amplitude, as in serialize()
             end
 
             wav = L(j,grad_amp_indeces(iax)) / sysGE.gamma / 100 * wav;  % Gauss/cm
