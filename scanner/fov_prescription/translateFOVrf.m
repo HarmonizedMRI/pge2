@@ -27,7 +27,7 @@ catch ME
     error(ME.message);
 end
 try
-    psq = pge2.translateFOVrf(psq, [0 0 z_offset*1e-3]);
+    psq = pge2.translateFOVrf(psg, [0 0 z_offset*1e-3]);
 catch ME
     warning(sprintf('pge2.translateFOVrf failed -- this may happen for block pulses, which is typically ok'));
 end
