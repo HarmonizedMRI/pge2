@@ -1,7 +1,6 @@
-# PulSeq protocol slots
+# Pulseq protocol slots
 #
-# opuser1  scan 
-
-21          gre2d.seq
-22          b0.seq
-23          mprage.seq
+# opuser1  pislquant  soft_delay_input_ms  sequence
+21         10         -                    gre2d.seq
+22         10         700                  b0.seq
+23         10         -                    mprage.seq

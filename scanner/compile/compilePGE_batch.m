@@ -1,23 +1,7 @@
 function compilePGE_batch(scan_list, opts)
-% compilePGE_batch  Compile a batch of Pulseq sequences for GE.
-%
-%   compilePGE_batch(scan_list, opts)
-%
-%   scan_list : Path to a text file with one entry per line:
-%
-%               <opuser1> <seq_file>
-%
-%               For example:
-%
-%                   20 localizer.seq
-%                   21 gre.seq
-%
-%               Empty lines and lines beginning with '#' are ignored.
-%
-%   opts      : Options structure passed to compilePGE().
-%
-%   Each sequence is written to a .pge file having the same base name as
-%   the corresponding .seq file.
+
+% scan_list format:
+% <opuser1> <pislquant> <soft_delay_input_ms|-> <seq_file>
 
 arguments
     scan_list {mustBeTextScalar}
@@ -34,39 +18,46 @@ elseif ~isstruct(opts)
 end
 
 if ~isfile(scan_list)
-error('compilePGE_batch:ScanListNotFound', ...
-'Scan-list file not found: %s', scan_list);
+    error('compilePGE_batch:ScanListNotFound', ...
+        'Scan-list file not found: %s', scan_list);
 end
 
 lines = readlines(scan_list);
-
 for i = 1:numel(lines)
-
     line = strtrim(lines(i));
-
-    % Skip empty lines and comments
     if line == "" || startsWith(line, '#')
         continue
     end
 
     parts = strsplit(line);
-
-    if numel(parts) < 2
+    if numel(parts) ~= 4
         warning('compilePGE_batch:MalformedLine', ...
-            'Skipping malformed line %d: "%s"', i, line);
+            ['Skipping malformed line %d. Expected: ' ...
+             '<opuser1> <pislquant> <soft_delay_input_ms|-> <seq_file>'], i);
         continue
     end
 
     opuser1 = str2double(parts(1));
+    pislquant = str2double(parts(2));
 
-    if isnan(opuser1)
-        warning('compilePGE_batch:InvalidOpuser1', ...
-            'Could not parse opuser1 on line %d: "%s"', i, line);
+    if isnan(opuser1) || isnan(pislquant)
+        warning('compilePGE_batch:InvalidNumericField', ...
+            'Could not parse opuser1 or pislquant on line %d.', i);
         continue
     end
 
-    seqFile = parts(2);
+    if parts(3) == "-"
+        soft_delay_input_ms = [];
+    else
+        soft_delay_input_ms = str2double(parts(3));
+        if isnan(soft_delay_input_ms)
+            warning('compilePGE_batch:InvalidSoftDelayInput', ...
+                'Invalid soft_delay_input_ms on line %d.', i);
+            continue
+        end
+    end
 
+    seqFile = parts(4);
     if ~isfile(seqFile)
         warning('compilePGE_batch:SequenceNotFound', ...
             'Skipping line %d because sequence file was not found: %s', ...
@@ -74,11 +65,15 @@ for i = 1:numel(lines)
         continue
     end
 
-    [seqPath, seqName] = fileparts(seqFile);
-    outputFile = seqName + ".pge";   % write to current working directory
+    [~, seqName] = fileparts(seqFile);
+    outputFile = seqName + ".pge";
 
     fprintf('\nCompiling %s -> %s\n', seqFile, outputFile);
 
-    compilePGE(seqFile, opuser1, outputFile, opts);
+    if isempty(soft_delay_input_ms)
+        compilePGE(seqFile, opuser1, pislquant, outputFile, opts);
+    else
+        compilePGE(seqFile, opuser1, pislquant, outputFile, opts, ...
+            'soft_delay_input_ms', soft_delay_input_ms);
+    end
 end
-

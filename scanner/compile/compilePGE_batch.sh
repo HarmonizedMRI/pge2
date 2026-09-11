@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Compile a list of Pulseq sequences into GE .pge and .entry files.
+#
+# Usage:
+#   ./compilePGE_batch.sh <scan_list> <config_json>
+#
+# Scan-list format:
+#   <opuser1> <pislquant> <soft_delay_input_ms|-> <sequence.seq>
+#
+# Use '-' for soft_delay_input_ms when the sequence does not require one.
+
+MATLAB_RUNTIME_DIR=/opt/mathworks_matlab_runtime_r2022a/root/v912
+
+# Example MATLAB installation for local testing:
+# MATLAB_RUNTIME_DIR=/usr/local/MATLAB/R2024b
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+RUN_SCRIPT="${SCRIPT_DIR}/run_compilePGE_batch.sh"
+
+if [[ $# -ne 2 ]]; then
+    echo "Usage: $0 <scan_list> <config_json>" >&2
+    exit 1
+fi
+
+SCAN_LIST="$1"
+CONFIG_JSON="$2"
+
+if [[ ! -f "$SCAN_LIST" ]]; then
+    echo "Error: scan list file not found: $SCAN_LIST" >&2
+    exit 1
+fi
+
+if [[ ! -f "$CONFIG_JSON" ]]; then
+    echo "Error: JSON configuration file not found: $CONFIG_JSON" >&2
+    exit 1
+fi
+
+if [[ ! -x "$RUN_SCRIPT" ]]; then
+    echo "Error: MATLAB Runtime launcher not found or not executable:" >&2
+    echo "  $RUN_SCRIPT" >&2
+    exit 1
+fi
+
+if [[ ! -d "$MATLAB_RUNTIME_DIR" ]]; then
+    echo "Error: MATLAB Runtime directory not found:" >&2
+    echo "  $MATLAB_RUNTIME_DIR" >&2
+    exit 1
+fi
+
+echo "Compiling Pulseq sequences"
+echo "  Scan list:      $SCAN_LIST"
+echo "  Configuration:  $CONFIG_JSON"
+echo "  MATLAB Runtime: $MATLAB_RUNTIME_DIR"
+
+"$RUN_SCRIPT" \
+    "$MATLAB_RUNTIME_DIR" \
+    "$SCAN_LIST" \
+    "$CONFIG_JSON"
+
+echo "Compilation complete."

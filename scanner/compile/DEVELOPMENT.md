@@ -1,6 +1,6 @@
 # Developer Information
 
-This document describes how to rebuild the standalone Pulseq compiler.
+This document describes how to rebuild and test the standalone Pulseq compiler.
 
 ## Compiler structure
 
@@ -11,7 +11,15 @@ Two standalone command-line interfaces are provided for scanner-side use:
 - `compilePGE_cli.m` — wrapper for compiling a single sequence
 - `compilePGE_batch.m` — wrapper for compiling multiple sequences from a scan list
 
-Both ultimately call `compilePGE.m` and use the same JSON configuration loaded by `loadOptionsJSON.m`.
+Both ultimately call `compilePGE.m` and use the same shared JSON configuration loaded by `loadOptionsJSON.m`.
+
+The following parameters are sequence-specific and are intentionally not stored in `compilePGE.json`:
+
+- `opuser1`
+- `pislquant`
+- `soft_delay_input_ms` (only for sequences containing soft-delay events)
+
+For batch compilation, these values are specified in `pulseq_scans.list`.
 
 ## Building the executables
 
@@ -74,10 +82,53 @@ opts = loadOptionsJSON('compilePGE.json');
 opts = rmfield(opts, 'translateFOV');
 
 opuser1 = 48;
-compilePGE('gre2d.seq', opuser1, 'gre2d.pge', opts);
+pislquant = 10;
+
+compilePGE('gre2d.seq', opuser1, pislquant, 'gre2d.pge', opts);
 ```
 
-This is useful for development and testing and uses the same `compilePGE.json` configuration as the standalone compiler.
+For a sequence containing soft-delay events:
+
+```matlab
+compilePGE('gre2d.seq', opuser1, pislquant, 'gre2d.pge', opts, ...
+    'soft_delay_input_ms', 700);
+```
+
+This uses the same `compilePGE.json` configuration as the standalone compiler while keeping sequence-specific parameters outside the shared configuration.
+
+---
+
+## Testing the standalone interfaces
+
+After rebuilding the executables, the single-sequence interface can be tested using:
+
+```bash
+./compilePGE.sh gre2d.seq 48 10 gre2d.pge compilePGE.json \
+    --no-translate-fov
+```
+
+For a sequence containing soft-delay events:
+
+```bash
+./compilePGE.sh gre2d.seq 48 10 gre2d.pge compilePGE.json \
+    --soft-delay-input-ms 700 --no-translate-fov
+```
+
+The batch interface uses a four-column scan list:
+
+```text
+# opuser1  pislquant  soft_delay_input_ms  sequence
+48         10         -                    gre2d.seq
+49         12         700                  b0.seq
+```
+
+and is run using:
+
+```bash
+./compilePGE_batch.sh pulseq_scans.list compilePGE.json
+```
+
+Use `-` for `soft_delay_input_ms` when the sequence does not contain soft-delay events.
 
 ---
 
