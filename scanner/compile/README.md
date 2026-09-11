@@ -110,7 +110,7 @@ Run the Pulseq (`pge2`) scans as usual.
 
 ## Direct compilation from MATLAB
 
-For development and testing, `compilePGE.m` can also be called directly from MATLAB without using the standalone executable.
+For development and testing, `compilePGE.m` can also be called directly from MATLAB for an individual `.seq` file without using the standalone executable.
 
 This can be convenient when iterating on a Pulseq sequence locally. 
 It is also useful when prescription-dependent FOV translation is not required, allowing the `.pge` file to be generated before transferring it to the scanner.
