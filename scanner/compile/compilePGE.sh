@@ -11,7 +11,7 @@ set -euo pipefail
 MATLAB_RUNTIME_DIR=/opt/mathworks_matlab_runtime_r2022a/root/v912
 
 # Example MATLAB installation for local testing:
-MATLAB_RUNTIME_DIR=/usr/local/MATLAB/R2024b
+#MATLAB_RUNTIME_DIR=/usr/local/MATLAB/R2022a
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 RUN_SCRIPT="${SCRIPT_DIR}/run_compilePGE_cli.sh"
