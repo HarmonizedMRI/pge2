@@ -1,7 +1,8 @@
 # Scanner-side Pulseq compilation for the pge2 GE interpreter
 
-This package compiles Pulseq (.seq) files into GE-compatible .pge and .entry files on the scanner using the MATLAB Runtime. 
-It performs the complete Pulseq-to-GE compilation pipeline and is intended for use with the pge2 GE interpreter.
+This package compiles Pulseq (.seq) files into GE-compatible .pge and .entry files for use with the pge2 GE interpreter. 
+Compilation can be performed directly in MATLAB during development or on the scanner using the standalone MATLAB Runtime executable.
+
 
 ---
 
@@ -104,6 +105,33 @@ GE Pulseq directory.
 ### 6. Run the Pulseq scans
 
 Run the Pulseq (`pge2`) scans as usual.
+
+---
+
+## Direct compilation from MATLAB
+
+For development and testing, `compilePGE.m` can also be called directly from MATLAB without using the standalone executable.
+
+This can be convenient when iterating on a Pulseq sequence locally. 
+It is also useful when prescription-dependent FOV translation is not required, allowing the `.pge` file to be generated before transferring it to the scanner.
+
+```matlab
+setup
+
+opts = loadOptionsJSON('compilePGE.json');
+
+% Disable prescription-dependent FOV translation if Rx.txt is unavailable
+opts = rmfield(opts, 'translateFOV');
+
+opuser1 = 48;
+compilePGE('gre2d.seq', opuser1, 'gre2d.pge', opts);
+```
+
+This generates `gre2d.pge` and the corresponding `pge48.entry` file.
+
+The `translateFOV` field should be omitted when no scanner prescription (`Rx.txt`) is available. 
+In this case, the sequence is compiled without prescription-dependent RF translation. 
+The prescribed rotation and scanner z-axis table translation can still be applied later by the pge2 interpreter on the scanner.
 
 ---
 
