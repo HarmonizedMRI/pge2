@@ -1,14 +1,12 @@
-# Scanner-side Pulseq compilation for the pge2 GE interpreter
+# Pulseq compilation for the pge2 GE interpreter
 
-This package compiles Pulseq (.seq) files into GE-compatible .pge and .entry files for use with the pge2 GE interpreter. 
-Compilation can be performed directly in MATLAB during development or on the scanner using the standalone MATLAB Runtime executable.
-
+This package compiles Pulseq (`.seq`) files into GE-compatible `.pge` and `.entry` files for use with the pge2 GE interpreter. Compilation can be performed directly in MATLAB during development or on the scanner using the MATLAB Runtime.
 
 ---
 
 ## Overview
 
-The scanner compiler performs the following Pulseq-to-GE compilation pipeline:
+The compiler performs the following Pulseq-to-GE compilation pipeline:
 
 ```mermaid
 flowchart TD
@@ -27,93 +25,15 @@ flowchart TD
     H --> J[".entry"]
 ```
 
-If an `Rx.txt` file is provided, the prescribed slice offset is applied automatically to the RF excitation before importing the sequence into the GE interpreter. This accounts for all components of the prescribed translation that cannot be achieved by scanner table motion, including through-slice offsets for oblique prescriptions. Otherwise, the original Pulseq sequence is compiled without modification. The prescribed rotation and the scanner z-axis (S/I) translation are always applied, regardless of whether an `Rx.txt` file is provided.
+If an `Rx.txt` file is provided, the prescribed slice offset is applied automatically to the RF excitation before importing the sequence into the GE interpreter. This accounts for all components of the prescribed translation that cannot be achieved by scanner table motion, including through-slice offsets for oblique prescriptions. Otherwise, the original Pulseq sequence is compiled without modification.
 
----
-
-## Directory contents
-
-The scanner compilation directory should contain the following files:
-
-```text
-compile/
-├── compilePGE.sh
-├── compilePGE_batch
-├── run_compilePGE_batch.sh
-├── compilePGE.json
-├── pulseq_scans.list
-├── Rx.txt          (optional)
-└── *.seq
-```
-
-* `compilePGE.sh` — main compilation script
-* `compilePGE_batch` and `run_compilePGE_batch.sh` — standalone MATLAB executable and launcher
-* `compilePGE.json` — compilation options
-* `pulseq_scans.list` — sequences to compile
-* `Rx.txt (optional)` — exported scanner prescription
-
-> [!NOTE]
-> run_compilePGE_batch.sh and compilePGE_batch are generated together and should always be copied as a pair.
-
----
-
-## Compilation workflow
-
-### 1. Create a scan list
-
-Create a text file (for example `pulseq_scans.list`) containing the Pulseq
-sequences to compile:
-
-```text
-# opuser1    sequence.seq
-48           gre2d.seq
-49           b0.seq
-50           t1map.seq
-```
-
-The `opuser1` value specifies the Pulseq interpreter slot (`pge<opuser1>.entry`)
-used by the pge2 GE interpreter.
-
-### 2. Prescribe a reference scan
-
-Prescribe any scan on the GE scanner (either a vendor sequence or a Pulseq
-sequence). This establishes the desired slice position, orientation, and table
-location.
-
-### 3. Save the prescription
-
-```bash
-printSHM > Rx.txt
-```
-
-`printSHM` exports the current scanner prescription, including the slice position, orientation, table position, and field of view. 
-If `translateFOV.Rxfile` is specified in `compilePGE.json`, this information is automatically applied during compilation.
-
-### 4. Compile all sequences
-
-```bash
-./compilePGE.sh pulseq_scans.list compilePGE.json
-```
-
-This generates one `.pge` file and one `.entry` file for every sequence listed.
-
-### 5. Install the generated entry files
-
-Create symbolic links (or otherwise install) the generated `.entry` files in the
-GE Pulseq directory.
-
-### 6. Run the Pulseq scans
-
-Run the Pulseq (`pge2`) scans as usual.
+The prescribed rotation and the scanner z-axis (S/I) translation are always applied, regardless of whether an `Rx.txt` file is provided.
 
 ---
 
 ## Direct compilation from MATLAB
 
-For development and testing, `compilePGE.m` can also be called directly from MATLAB for an individual `.seq` file without using the standalone executable.
-
-This can be convenient when iterating on a Pulseq sequence locally. 
-It is also useful when prescription-dependent FOV translation is not required, allowing the `.pge` file to be generated before transferring it to the scanner.
+For development and testing, a Pulseq sequence can be compiled directly from MATLAB:
 
 ```matlab
 setup
@@ -129,15 +49,116 @@ compilePGE('gre2d.seq', opuser1, 'gre2d.pge', opts);
 
 This generates `gre2d.pge` and the corresponding `pge48.entry` file.
 
-The `translateFOV` field should be omitted when no scanner prescription (`Rx.txt`) is available. 
-In this case, the sequence is compiled without prescription-dependent RF translation. 
-The prescribed rotation and scanner z-axis table translation can still be applied later by the pge2 interpreter on the scanner.
+Direct MATLAB compilation is convenient when developing or modifying a sequence. It can also be used to generate the `.pge` and `.entry` files before going to the scanner when prescription-dependent RF translation is not required.
+
+If an `Rx.txt` file is available, the `translateFOV` field can instead be retained in `opts` to apply the prescribed translation during compilation.
+
+---
+
+## Scanner-side compilation
+
+The standalone compiler allows the same compilation to be performed directly on the scanner using the MATLAB Runtime.
+
+### Compile a single sequence
+
+To compile a single Pulseq sequence:
+
+```bash
+./compilePGE.sh gre2d.seq 48 gre2d.pge compilePGE.json
+```
+
+where `48` specifies the Pulseq interpreter slot (`pge48.entry`) used by the pge2 GE interpreter.
+
+To compile without prescription-dependent FOV translation:
+
+```bash
+./compilePGE.sh gre2d.seq 48 gre2d.pge compilePGE.json --no-translate-fov
+```
+
+This is equivalent to removing the `translateFOV` field from `opts` when calling `compilePGE.m` directly from MATLAB.
+
+### Compile multiple sequences
+
+Create a text file (for example `pulseq_scans.list`) containing the Pulseq sequences to compile:
+
+```text
+# opuser1    sequence.seq
+48           gre2d.seq
+49           b0.seq
+50           t1map.seq
+```
+
+Then compile all sequences using:
+
+```bash
+./compilePGE_batch.sh pulseq_scans.list compilePGE.json
+```
+
+This generates one `.pge` file and one `.entry` file for every sequence listed.
+
+---
+
+## Scanner prescription
+
+### 1. Prescribe a reference scan
+
+Prescribe any scan on the GE scanner (either a vendor sequence or a Pulseq sequence). This establishes the desired slice position, orientation, and table location.
+
+### 2. Save the prescription
+
+```bash
+printSHM > Rx.txt
+```
+
+`printSHM` exports the current scanner prescription, including the slice position, orientation, table position, and field of view.
+
+If `translateFOV.Rxfile` is specified in `compilePGE.json`, this information is automatically applied during compilation. Alternatively, prescription-dependent FOV translation can be disabled using `--no-translate-fov` when compiling a single sequence.
+
+### 3. Install the generated entry files
+
+Create symbolic links (or otherwise install) the generated `.entry` files in the GE Pulseq directory.
+
+### 4. Run the Pulseq scans
+
+Run the compiled Pulseq (`pge2`) sequences as usual.
+
+---
+
+## Directory contents
+
+A scanner compilation directory may contain:
+
+```text
+compile/
+├── compilePGE.sh
+├── compilePGE_cli
+├── run_compilePGE_cli.sh
+├── compilePGE_batch.sh
+├── compilePGE_batch
+├── run_compilePGE_batch.sh
+├── compilePGE.json
+├── pulseq_scans.list
+├── Rx.txt                    (optional)
+└── *.seq
+```
+
+- `compilePGE.sh` — command-line interface for compiling a single sequence
+- `compilePGE_cli` and `run_compilePGE_cli.sh` — standalone MATLAB executable and launcher for single-sequence compilation
+- `compilePGE_batch.sh` — command-line interface for batch compilation
+- `compilePGE_batch` and `run_compilePGE_batch.sh` — standalone MATLAB executable and launcher for batch compilation
+- `compilePGE.json` — compilation options
+- `pulseq_scans.list` — list of sequences for batch compilation
+- `Rx.txt` *(optional)* — scanner prescription exported using `printSHM`
+- `*.seq` — Pulseq sequence files
+
+> [!NOTE]
+> Each standalone executable and its corresponding `run_*.sh` launcher are generated together and should always be copied as a pair.
 
 ---
 
 ## Configuration
 
-Compilation is controlled by `compilePGE.json`.
+Compilation is controlled by `compilePGE.json`. The same configuration file is used for direct MATLAB compilation and scanner-side compilation.
 
 ### Sections
 
@@ -155,26 +176,4 @@ Compilation is controlled by `compilePGE.json`.
 
 | Field | Description |
 |------|-------------|
-| `pulseg_import.soft_delay_input_ms` | Value assigned to Pulseq soft-delay events. Required only if the sequence contains soft delays. |
-| `translateFOV.Rxfile` | Scanner prescription file generated by `printSHM`. |
-| `pge_opts.coil` | Gradient coil model. Determines the default values of `chronaxie`, `rheobase`, and `alpha` used by the PNS model. |
-| `pge_opts.options` | Optional name-value arguments passed directly to `pge2.opts()`. Most users should leave these unchanged. Override `chronaxie`, `rheobase`, or `alpha` only when intentionally modifying the default PNS model. |
-| `pge_import.grad_raster_time` | Gradient raster time passed to `pge2.import()`. |
-| `pge_check.pns_weights` | Relative weighting of the x, y, and z gradient axes used during PNS estimation. |
-| `pge_serialize.pislquant` | Number of ADC events used during Auto Prescan receive-gain calibration. |
-| `pge_serialize.checkHash` | Verify waveform hashes after serialization. |
-| `pge_writeentryfile.path` | Output directory for generated `.entry` files. |
-
----
-
-## Developer notes
-
-Instructions for building the standalone executable (`compilePGE_batch` and `run_compilePGE_batch.sh`) are available in `DEVELOPMENT.md`.
-
-Unlike previous versions of this workflow, the scanner compiler operates
-directly on Pulseq `.seq` files. No intermediate MATLAB `.mat` files are
-required.
-
-The JSON configuration is translated into the corresponding MATLAB API calls,
-including construction of the scanner hardware model via `pge2.opts()`.
-
+| `pulseg_import.soft_delay_input_ms` | Value assigned to Pu

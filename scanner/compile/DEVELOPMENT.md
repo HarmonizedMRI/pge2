@@ -1,26 +1,83 @@
 # Developer Information
 
-This document describes how to rebuild the standalone Pulseq compiler and set up a compatible development environment.
+This document describes how to rebuild the standalone Pulseq compiler.
 
-## Building the executable
+## Compiler structure
 
-Build the standalone compiler using **MATLAB R2022a**:
+`compilePGE.m` is the core single-sequence compiler and can be called directly from MATLAB during development.
+
+Two standalone command-line interfaces are provided for scanner-side use:
+
+- `compilePGE_cli.m` — wrapper for compiling a single sequence
+- `compilePGE_batch.m` — wrapper for compiling multiple sequences from a scan list
+
+Both ultimately call `compilePGE.m` and use the same JSON configuration loaded by `loadOptionsJSON.m`.
+
+## Building the executables
+
+The standalone executables must be built using **MATLAB R2022a**.
+
+Start MATLAB and initialize the pge2 environment:
 
 ```matlab
 setup
+```
+
+### Single-sequence compiler
+
+Compile the command-line wrapper:
+
+```matlab
+mcc -m compilePGE_cli.m
+```
+
+This generates:
+
+```text
+compilePGE_cli
+run_compilePGE_cli.sh
+```
+
+These files are used by `compilePGE.sh`.
+
+### Batch compiler
+
+Compile the batch wrapper:
+
+```matlab
 mcc -m compilePGE_batch.m
 ```
 
-This generates the standalone executable (`compilePGE_batch`) and its launcher script (`run_compilePGE_batch.sh`), which are invoked by `compilePGE.sh`.
+This generates:
 
 ```text
-compile/
-├── compilePGE_batch
-└── run_compilePGE_batch.sh
+compilePGE_batch
+run_compilePGE_batch.sh
 ```
 
-Copy both files to the scanner compilation directory. 
-The launcher script and executable are generated as a pair and should always be distributed together.
+These files are used by `compilePGE_batch.sh`.
+
+Copy each executable and its corresponding launcher script to the scanner compilation directory. The executable and launcher are generated as a pair and should always be distributed together.
+
+---
+
+## Testing in MATLAB
+
+The core compiler can be called directly from MATLAB without building a standalone executable:
+
+```matlab
+setup
+
+opts = loadOptionsJSON('compilePGE.json');
+
+% Disable prescription-dependent FOV translation if Rx.txt is unavailable
+opts = rmfield(opts, 'translateFOV');
+
+opuser1 = 48;
+compilePGE('gre2d.seq', opuser1, 'gre2d.pge', opts);
+```
+
+This is useful for development and testing and uses the same `compilePGE.json` configuration as the standalone compiler.
 
 ---
 
@@ -35,11 +92,11 @@ The target GE scanner uses the MATLAB Runtime located at:
 ```
 
 > [!IMPORTANT]
-> The standalone executable **must** be compiled using **MATLAB R2022a**. Executables compiled with newer MATLAB releases are not compatible with the scanner runtime.
+> The standalone executables **must** be compiled using **MATLAB R2022a**. Executables compiled with newer MATLAB releases are not compatible with the scanner runtime.
 
 ### Local MATLAB Runtime (optional)
 
-The MATLAB Runtime can also be installed locally for testing the standalone executable.
+The MATLAB Runtime can also be installed locally for testing the standalone executables.
 
 ```matlab
 >> compiler.runtime.download
@@ -49,7 +106,9 @@ Downloading MATLAB Runtime installer. It may take several minutes...
     '/home/jon/.MathWorks/MatlabRuntimeCache/MCRInstaller24.2/MATLAB_Runtime_R2024b_Update_4_glnxa64.zip'
 ```
 
-In this case, set `MATLAB_RUNTIME_DIR` in `compilePGE.sh` accordingly.
+In this case, set `MATLAB_RUNTIME_DIR` in `compilePGE.sh` and `compilePGE_batch.sh` accordingly.
+
+---
 
 ## Ubuntu 22.04 LTS
 
@@ -57,17 +116,17 @@ Ubuntu 22.04 LTS is recommended for building the standalone compiler because it 
 
 ### Virtual machine configuration
 
-* GNOME Boxes
-* 8 GB RAM
-* 60 GB storage
-* Express installation
+- GNOME Boxes
+- 8 GB RAM
+- 60 GB storage
+- Express installation
 
 ### Recommended software
 
 Install:
 
-* `git`
-* `vim`
+- `git`
+- `vim`
 
 Configure Git:
 
@@ -111,8 +170,7 @@ A separate license file is not required if your institution provides network lic
 
 ### Required toolboxes
 
-The following toolbox configuration has been verified to build the standalone compiler successfully. 
-The minimum required toolbox set has not been determined.
+The following toolbox configuration has been verified to build the standalone compiler successfully. The minimum required toolbox set has not been determined.
 
 ```matlab
 >> ver
@@ -129,4 +187,3 @@ Optimization Toolbox                                  Version 9.3         (R2022
 Signal Processing Toolbox                             Version 9.0         (R2022a)
 Wavelet Toolbox                                       Version 6.1         (R2022a)
 ```
-
